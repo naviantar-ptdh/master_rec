@@ -57,7 +57,9 @@ date_cols = [
 for col in date_cols:
     if col in df.columns:
         df[col] = pd.to_datetime(df[col], errors='coerce')
-
+for col in date_cols:
+    if col in df.columns:
+        df[col] = pd.to_datetime(df[col], errors='coerce').dt.date
 # ======================
 # DISPLAY DATA
 # ======================
