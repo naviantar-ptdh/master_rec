@@ -6,7 +6,7 @@ from google.oauth2 import service_account
 # ======================
 # TITLE
 # ======================
-st.title("Recruitment Dashboard")
+st.title("Recruitment Database")
 
 # ======================
 # CONNECT TO BIGQUERY
