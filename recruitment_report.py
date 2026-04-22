@@ -10,7 +10,7 @@ def get_base64(file):
     with open(file, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
-bg_img = get_base64("gambar1.jpg")
+bg_img = get_base64("gambar1.JPG")
 
 # ======================
 # SPLASH SCREEN
