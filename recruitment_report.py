@@ -1,86 +1,18 @@
 import streamlit as st
 import pandas as pd
-import time
-import base64
+import matplotlib.pyplot as plt
+import io
 
 # ======================
-# CONFIG (WAJIB PALING ATAS)
+# CONFIG
 # ======================
-st.set_page_config(
-    page_title="Tracking Candidate",
-    layout="wide"
-)
-
+st.set_page_config(page_title="Recruitment App", layout="wide")
 
 # ======================
-# SPLASH SCREEN SIMPLE
+# SESSION NAVIGATION
 # ======================
-if "loaded" not in st.session_state:
-    st.session_state.loaded = False
-
-if not st.session_state.loaded:
-
-    placeholder = st.empty()
-
-    with placeholder.container():
-        st.markdown(
-            """
-            <style>
-            .center {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                flex-direction: column;
-                height: 80vh;
-                color: white;
-            }
-            body {
-                background-color: #0e1117;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-
-        st.markdown(
-    """
-    <style>
-    .stApp {
-        background-image: url("https://images.unsplash.com/photo-1523848309072-c199db53f137?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
-        background-size: cover;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True)
-
-        st.image("logo_solid.png", width=120)
-
-        st.markdown(
-            "<h2 style='color:white;'>Recruitment Dashboard</h2>",
-            unsafe_allow_html=True
-        )
-
-        st.markdown(
-            "<p style='color:gray;'>Loading...</p>",
-            unsafe_allow_html=True
-        )
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    time.sleep(5)
-    st.session_state.loaded = True
-    placeholder.empty()
-
-# ======================
-# HEADER
-# ======================
-col_logo, col_title = st.columns([1, 8], vertical_alignment="center")
-
-with col_logo:
-    st.image("logo_solid.png", width=70)
-
-with col_title: 
-    st.title("Candidate & Position Tracking")
+if "page" not in st.session_state:
+    st.session_state.page = "home"
 
 # ======================
 # LOAD DATA
@@ -90,141 +22,203 @@ def load_data():
     url = "https://docs.google.com/spreadsheets/d/1eysrca2wIWsx2LZeP3z2qlRawLzdRBYxsDf6JizcaZc/export?format=csv"
     return pd.read_csv(url)
 
-df = load_data()
+@st.cache_data(ttl=60)
+def load_mpp():
+    url = "https://docs.google.com/spreadsheets/d/10A2o_8D_C5d0HWl1ve6WNn9V7AdSqSufLnWr3lKtR9I/export?format=csv&gid=0"
+    return pd.read_csv(url)
 
-if df.empty:
-    st.warning("No data available")
-    st.stop()
+df = load_data()
+mpp = load_mpp()
 
 df.columns = df.columns.str.lower()
+mpp.columns = mpp.columns.str.lower()
 
 # ======================
-# CLEANING
+# LANDING PAGE
 # ======================
-for col in ["candidate_id", "position_name", "departement", "level", "loc", "status1", "last_progress"]:
-    if col in df.columns:
-        df[col] = df[col].fillna("Unknown")
+if st.session_state.page == "home":
+
+    st.markdown("<h1 style='text-align:center;'>Recruitment Dashboard</h1>", unsafe_allow_html=True)
+    st.markdown("###")
+
+    c1, c2, c3 = st.columns(3)
+
+    with c1:
+        st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=120)
+        if st.button("📊 Recruitment Report"):
+            st.session_state.page = "report"
+            st.rerun()
+
+    with c2:
+        st.image("https://cdn-icons-png.flaticon.com/512/747/747376.png", width=120)
+        if st.button("🔍 Tracking Candidate"):
+            st.session_state.page = "tracking"
+            st.rerun()
+
+    with c3:
+        st.image("https://cdn-icons-png.flaticon.com/512/1828/1828817.png", width=120)
+        st.button("⚙️ Coming Soon", disabled=True)
 
 # ======================
-# SEARCH MODE
+# BACK BUTTON
 # ======================
-mode = st.radio(
-    "Search Mode",
-    ["By Position", "By Candidate"],
-    horizontal=True
-)
+def back_button():
+    if st.button("⬅ Back to Home"):
+        st.session_state.page = "home"
+        st.rerun()
 
-# ======================
-# BY POSITION
-# ======================
-if mode == "By Position":
+# =========================================================
+# ====================== REPORT PAGE =======================
+# =========================================================
+if st.session_state.page == "report":
 
-    pos_list = sorted(df["position_name"].dropna().unique())
+    back_button()
 
-    selected_pos = st.selectbox("Select Position", pos_list)
+    st.title("📊 Recruitment Report")
 
-    filtered = df[df["position_name"] == selected_pos]
+    # ======================
+    # FILTER
+    # ======================
+    f1, f2, f3 = st.columns(3)
 
-    st.subheader(f"Candidates for: {selected_pos}")
+    lvl = f1.selectbox("Level", ["All"] + sorted(df["level"].dropna().unique()))
+    loc = f2.selectbox("Location", ["All"] + sorted(df["loc"].dropna().unique()))
+    stt = f3.selectbox("Status", ["All"] + sorted(df["status"].dropna().unique()))
 
-    display_df = filtered[[
-        "candidate_id",
-        "position_name",
-        "departement",
-        "level",
-        "loc",
-        "status1",
-        "last_progress"
-    ]].copy()
+    df_filtered = df.copy()
 
-    display_df = display_df.rename(columns={
-        "status1": "Hiring Status"
+    if lvl != "All":
+        df_filtered = df_filtered[df_filtered["level"] == lvl]
+    if loc != "All":
+        df_filtered = df_filtered[df_filtered["loc"] == loc]
+    if stt != "All":
+        df_filtered = df_filtered[df_filtered["status"] == stt]
+
+    # ======================
+    # MPP TABLE
+    # ======================
+    st.subheader("MPP Dashboard")
+
+    pivot = mpp.groupby("divisi")[[
+        "2026(r)", "2026(a)", "talent_management", "gap_fullfill_rec"
+    ]].sum()
+
+    pivot = pivot.rename(columns={
+        "2026(r)": "MPP",
+        "2026(a)": "Existing",
+        "talent_management": "ADP_2026",
+        "gap_fullfill_rec": "GAP"
     })
 
-    # ❗ FIX: tanpa style biar aman
-    st.dataframe(display_df, use_container_width=True)
+    # TOTAL ROW 🔥
+    total_row = pivot.sum()
+    total_row.name = "TOTAL"
+    pivot = pd.concat([pivot, total_row.to_frame().T])
 
-    st.metric("Total Candidate", len(display_df))
-
-# ======================
-# BY CANDIDATE
-# ======================
-else:
-
-    cand_list = sorted(df["candidate_id"].dropna().unique())
-
-    selected_cand = st.selectbox("Select Candidate", cand_list)
-
-    filtered = df[df["candidate_id"] == selected_cand]
-
-    if filtered.empty:
-        st.warning("Candidate not found")
-        st.stop()
-
-    row = filtered.iloc[0]
-
-    st.subheader(f"Candidate: {selected_cand}")
-
-    c1, c2, c3, c4 = st.columns(4)
-
-    c1.metric("Position", row.get("position_name", "-"))
-    c2.metric("Department", row.get("departement", "-"))
-    c3.metric("Level", row.get("level", "-"))
-    c4.metric("Location", row.get("loc", "-"))
-
-    # STATUS
-    status = str(row.get("status1", "Unknown")).upper()
-
-    if status == "OPEN":
-        st.success("🟠 OPEN")
-    elif status == "FAILED":
-        st.error("🔴 FAILED")
-    elif status == "CLOSE":
-        st.success("🟢 CLOSE")
-    else:
-        st.info("UNKNOWN")
-
-    st.divider()
+    st.dataframe(pivot, use_container_width=True)
 
     # ======================
     # PIPELINE
     # ======================
-    steps = [
-        ("Screening CV", "start_screening_cv", "complete_screening_cv"),
-        ("HR Interview", "start_interview_hr", "complete_interview_hr"),
-        ("User Interview", "start_interview_user", "complete_interview_user"),
-        ("Psychotest", "start_psychotest", "complete_psychotest"),
-        ("Offering", "start_offering", "complete_offering"),
-        ("MCU", "start_mcu", "mcu_date"),
-        ("Review MCU", "start_review_mcu", "review_mcu"),
-        ("FU MCU", "start_fu_mcu", "complete_fu_mcu"),
-        ("Onboarding", "date_onboarding", "date_onboarding"),
+    st.subheader("Pipeline Analysis")
+
+    date_cols = [
+        "start_screening_cv",
+        "start_interview_hr",
+        "start_interview_user",
+        "start_psychotest",
+        "start_offering",
+        "start_mcu",
+        "start_review_mcu",
+        "start_fu_mcu",
+        "date_onboarding"
     ]
 
-    def get_status(start, end):
-        if pd.notna(end):
-            return "Done"
-        elif pd.notna(start):
-            return "On Progress"
-        else:
-            return "Not Started"
+    for col in date_cols:
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], errors="coerce")
 
-    progress_data = []
+    pipeline = pd.DataFrame()
 
-    for step_name, start_col, end_col in steps:
-        progress_data.append({
-            "Stage": step_name,
-            "Start": row.get(start_col),
-            "End": row.get(end_col),
-            "Status": get_status(row.get(start_col), row.get(end_col))
+    def count(col):
+        return df.groupby("departement")[col].count()
+
+    pipeline["Screening CV"] = count("start_screening_cv")
+    pipeline["HR Interview"] = count("start_interview_hr")
+    pipeline["User Interview"] = count("start_interview_user")
+    pipeline["Onboarding"] = count("date_onboarding")
+
+    pipeline = pipeline.fillna(0)
+
+    # TOTAL ROW 🔥
+    total_pipeline = pipeline.sum()
+    total_pipeline.name = "TOTAL"
+    pipeline = pd.concat([pipeline, total_pipeline.to_frame().T])
+
+    st.dataframe(pipeline, use_container_width=True)
+
+# =========================================================
+# ===================== TRACKING PAGE ======================
+# =========================================================
+if st.session_state.page == "tracking":
+
+    back_button()
+
+    st.title("🔍 Candidate Tracking")
+
+    mode = st.radio("Mode", ["By Position", "By Candidate"], horizontal=True)
+
+    # ======================
+    # BY POSITION
+    # ======================
+    if mode == "By Position":
+
+        pos = st.selectbox("Select Position", sorted(df["position_name"].dropna().unique()))
+        data = df[df["position_name"] == pos]
+
+        show = data[[
+            "candidate_id",
+            "departement",
+            "level",
+            "loc",
+            "status1",
+            "last_progress"
+        ]].rename(columns={"status1": "Hiring Status"})
+
+        st.dataframe(show, use_container_width=True)
+        st.metric("Total Candidate", len(show))
+
+    # ======================
+    # BY CANDIDATE
+    # ======================
+    else:
+
+        cand = st.selectbox("Select Candidate", sorted(df["candidate_id"].dropna().unique()))
+        row = df[df["candidate_id"] == cand].iloc[0]
+
+        st.subheader(f"Candidate: {cand}")
+
+        st.write({
+            "Position": row.get("position_name"),
+            "Dept": row.get("departement"),
+            "Level": row.get("level"),
+            "Location": row.get("loc"),
+            "Status": row.get("status1")
         })
 
-    progress_df = pd.DataFrame(progress_data)
+        steps = [
+            ("Screening", "start_screening_cv", "complete_screening_cv"),
+            ("HR", "start_interview_hr", "complete_interview_hr"),
+            ("User", "start_interview_user", "complete_interview_user"),
+            ("Onboarding", "date_onboarding", "date_onboarding"),
+        ]
 
-    st.dataframe(progress_df, use_container_width=True)
+        prog = []
+        for name, s, e in steps:
+            prog.append({
+                "Stage": name,
+                "Start": row.get(s),
+                "End": row.get(e)
+            })
 
-    # PROGRESS BAR
-    done = (progress_df["Status"] == "Done").sum()
-    total = len(progress_df)
-
-    st.progress(done / total if total > 0 else 0)
+        st.dataframe(pd.DataFrame(prog), use_container_width=True)
