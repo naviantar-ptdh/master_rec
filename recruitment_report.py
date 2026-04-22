@@ -11,83 +11,57 @@ st.set_page_config(
     layout="wide"
 )
 
-# ======================
-# LOAD IMAGE BASE64
-# ======================
-def get_base64(file):
-    with open(file, "rb") as f:
-        return base64.b64encode(f.read()).decode()
-
-bg_img = get_base64("gambar1.JPG")
-logo_img = get_base64("logo_solid.png")
+st.write("APP STARTED")
 
 # ======================
-# SPLASH SCREEN
+# SPLASH SCREEN SIMPLE
 # ======================
 if "loaded" not in st.session_state:
     st.session_state.loaded = False
 
 if not st.session_state.loaded:
 
-    splash = st.empty()
+    placeholder = st.empty()
 
-    with splash.container():
+    with placeholder.container():
         st.markdown(
-            f"""
+            """
             <style>
-            .splash {{
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-image: url("data:image/jpg;base64,{bg_img}");
-                background-size: cover;
-                background-position: center;
+            .center {
                 display: flex;
-                flex-direction: column;
                 justify-content: center;
                 align-items: center;
+                flex-direction: column;
+                height: 80vh;
                 color: white;
-                z-index: 9999;
-            }}
-
-            .logo {{
-                width: 120px;
-            }}
-
-            .title {{
-                margin-top: 20px;
-                font-size: 28px;
-                font-weight: bold;
-            }}
-
-            .loading {{
-                margin-top: 10px;
-                font-size: 18px;
-                animation: blink 1.5s infinite;
-            }}
-
-            @keyframes blink {{
-                0% {{ opacity: 0.2; }}
-                50% {{ opacity: 1; }}
-                100% {{ opacity: 0.2; }}
-            }}
+            }
+            body {
+                background-color: #0e1117;
+            }
             </style>
-
-            <div class="splash">
-                <img src="data:image/png;base64,{logo_img}" class="logo">
-                <div class="title">Recruitment Dashboard</div>
-                <div class="loading">Loading...</div>
-            </div>
             """,
             unsafe_allow_html=True
         )
 
-    time.sleep(2.5)
+        st.markdown('<div class="center">', unsafe_allow_html=True)
 
+        st.image("logo_solid.png", width=120)
+
+        st.markdown(
+            "<h2 style='color:white;'>Recruitment Dashboard</h2>",
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            "<p style='color:gray;'>Loading...</p>",
+            unsafe_allow_html=True
+        )
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    time.sleep(2)
     st.session_state.loaded = True
-    splash.empty()
+    placeholder.empty()
 
 # ======================
 # HEADER
