@@ -11,7 +11,6 @@ st.set_page_config(
     layout="wide"
 )
 
-st.write("APP STARTED")
 
 # ======================
 # SPLASH SCREEN SIMPLE
