@@ -43,7 +43,16 @@ if not st.session_state.loaded:
             unsafe_allow_html=True
         )
 
-        st.markdown('<div class="center">', unsafe_allow_html=True)
+        st.markdown(
+    """
+    <style>
+    .stApp {
+        background-image: url("https://images.unsplash.com/photo-1492724441997-5dc865305da7");
+        background-size: cover;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True)
 
         st.image("logo_solid.png", width=120)
 
