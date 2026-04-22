@@ -4,7 +4,7 @@ import time
 import base64
 
 # ======================
-# CONFIG
+# CONFIG (WAJIB PALING ATAS)
 # ======================
 st.set_page_config(
     page_title="Tracking Candidate",
@@ -19,6 +19,7 @@ def get_base64(file):
         return base64.b64encode(f.read()).decode()
 
 bg_img = get_base64("gambar1.JPG")
+logo_img = get_base64("logo_solid.png")
 
 # ======================
 # SPLASH SCREEN
@@ -64,7 +65,6 @@ if not st.session_state.loaded:
             .loading {{
                 margin-top: 10px;
                 font-size: 18px;
-                opacity: 0.8;
                 animation: blink 1.5s infinite;
             }}
 
@@ -76,7 +76,7 @@ if not st.session_state.loaded:
             </style>
 
             <div class="splash">
-                <img src="logo_solid.png" class="logo">
+                <img src="data:image/png;base64,{logo_img}" class="logo">
                 <div class="title">Recruitment Dashboard</div>
                 <div class="loading">Loading...</div>
             </div>
@@ -89,7 +89,9 @@ if not st.session_state.loaded:
     st.session_state.loaded = True
     splash.empty()
 
-
+# ======================
+# HEADER
+# ======================
 col_logo, col_title = st.columns([1, 8], vertical_alignment="center")
 
 with col_logo:
@@ -131,30 +133,13 @@ mode = st.radio(
 )
 
 # ======================
-# COLOR FUNCTION
+# BY POSITION
 # ======================
-def color_status(val):
-    val = str(val).upper()
-    if val == "OPEN":
-        return "color: orange; font-weight: bold;"
-    elif val == "FAILED":
-        return "color: red; font-weight: bold;"
-    elif val == "CLOSE":
-        return "color: green; font-weight: bold;"
-    else:
-        return ""
-
-# =========================================================
-# ===================== BY POSITION ========================
-# =========================================================
 if mode == "By Position":
 
     pos_list = sorted(df["position_name"].dropna().unique())
 
-    selected_pos = st.selectbox(
-        "Select Position",
-        pos_list
-    )
+    selected_pos = st.selectbox("Select Position", pos_list)
 
     filtered = df[df["position_name"] == selected_pos]
 
@@ -174,25 +159,19 @@ if mode == "By Position":
         "status1": "Hiring Status"
     })
 
-    st.dataframe(
-        display_df.style.map(color_status, subset=["Hiring Status"]),
-        use_container_width=True
-    )
+    # ❗ FIX: tanpa style biar aman
+    st.dataframe(display_df, use_container_width=True)
 
     st.metric("Total Candidate", len(display_df))
 
-
-# =========================================================
-# ===================== BY CANDIDATE =======================
-# =========================================================
+# ======================
+# BY CANDIDATE
+# ======================
 else:
 
     cand_list = sorted(df["candidate_id"].dropna().unique())
 
-    selected_cand = st.selectbox(
-        "Select Candidate",
-        cand_list
-    )
+    selected_cand = st.selectbox("Select Candidate", cand_list)
 
     filtered = df[df["candidate_id"] == selected_cand]
 
@@ -202,9 +181,6 @@ else:
 
     row = filtered.iloc[0]
 
-    # ======================
-    # HEADER INFO
-    # ======================
     st.subheader(f"Candidate: {selected_cand}")
 
     c1, c2, c3, c4 = st.columns(4)
@@ -214,30 +190,23 @@ else:
     c3.metric("Level", row.get("level", "-"))
     c4.metric("Location", row.get("loc", "-"))
 
-    # ======================
-    # HIRING STATUS
-    # ======================
-    hiring_status = str(row.get("status1", "Unknown")).upper()
+    # STATUS
+    status = str(row.get("status1", "Unknown")).upper()
 
-    def color_box(status):
-        if status == "OPEN":
-            return "🟠 OPEN"
-        elif status == "FAILED":
-            return "🔴 FAILED"
-        elif status == "CLOSE":
-            return "🟢 CLOSE"
-        else:
-            return "⚪ UNKNOWN"
-
-    st.markdown(f"### Hiring Status: {color_box(hiring_status)}")
+    if status == "OPEN":
+        st.success("🟠 OPEN")
+    elif status == "FAILED":
+        st.error("🔴 FAILED")
+    elif status == "CLOSE":
+        st.success("🟢 CLOSE")
+    else:
+        st.info("UNKNOWN")
 
     st.divider()
 
     # ======================
-    # PIPELINE TRACKING
+    # PIPELINE
     # ======================
-    st.subheader("Recruitment Progress")
-
     steps = [
         ("Screening CV", "start_screening_cv", "complete_screening_cv"),
         ("HR Interview", "start_interview_hr", "complete_interview_hr"),
@@ -252,39 +221,28 @@ else:
 
     def get_status(start, end):
         if pd.notna(end):
-            return "✅ Done"
+            return "Done"
         elif pd.notna(start):
-            return "⏳ On Progress"
+            return "On Progress"
         else:
-            return "⚪ Not Started"
+            return "Not Started"
 
     progress_data = []
 
     for step_name, start_col, end_col in steps:
-        start_val = row.get(start_col)
-        end_val = row.get(end_col)
-
-        status = get_status(start_val, end_val)
-
         progress_data.append({
             "Stage": step_name,
-            "Start": start_val,
-            "End": end_val,
-            "Status": status
+            "Start": row.get(start_col),
+            "End": row.get(end_col),
+            "Status": get_status(row.get(start_col), row.get(end_col))
         })
 
     progress_df = pd.DataFrame(progress_data)
 
     st.dataframe(progress_df, use_container_width=True)
 
-    # ======================
     # PROGRESS BAR
-    # ======================
-    total_steps = len(progress_df)
-    done_steps = (progress_df["Status"] == "✅ Done").sum()
+    done = (progress_df["Status"] == "Done").sum()
+    total = len(progress_df)
 
-    progress = done_steps / total_steps if total_steps > 0 else 0
-
-    st.progress(progress)
-
-    st.caption(f"{done_steps}/{total_steps} steps completed")
+    st.progress(done / total if total > 0 else 0)
