@@ -47,7 +47,7 @@ if not st.session_state.loaded:
     """
     <style>
     .stApp {
-        background-image: url("https://images.unsplash.com/photo-1492724441997-5dc865305da7");
+        background-image: url("https://drive.google.com/file/d/160HoHS-SDvQDm0E4mVDloxuv1cwDHY5U/view?usp=sharing");
         background-size: cover;
     }
     </style>
