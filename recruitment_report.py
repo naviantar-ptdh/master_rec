@@ -4,6 +4,14 @@ import time
 import base64
 
 # ======================
+# CONFIG
+# ======================
+st.set_page_config(
+    page_title="Tracking Candidate",
+    layout="wide"
+)
+
+# ======================
 # LOAD IMAGE BASE64
 # ======================
 def get_base64(file):
@@ -81,13 +89,7 @@ if not st.session_state.loaded:
     st.session_state.loaded = True
     splash.empty()
 
-# ======================
-# CONFIG
-# ======================
-st.set_page_config(
-    page_title="Tracking Candidate",
-    layout="wide"
-)
+
 col_logo, col_title = st.columns([1, 8], vertical_alignment="center")
 
 with col_logo:
