@@ -47,7 +47,7 @@ if not st.session_state.loaded:
     """
     <style>
     .stApp {
-        background-image: url("https://raw.githubusercontent.com/naviantar-ptdh/master_rec/blob/main/gambar1%20(1).png");
+        st.image("gambar1(1).png");
         background-size: cover;
     }
     </style>
