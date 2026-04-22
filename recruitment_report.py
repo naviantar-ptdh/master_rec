@@ -68,7 +68,7 @@ if not st.session_state.loaded:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-    time.sleep(2)
+    time.sleep(5)
     st.session_state.loaded = True
     placeholder.empty()
 
