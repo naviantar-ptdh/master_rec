@@ -44,19 +44,19 @@ if st.session_state.page == "home":
     c1, c2, c3 = st.columns(3)
 
     with c1:
-        st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=120)
-        if st.button("📊 Recruitment Report"):
+        st.image("report.png", width=120)
+        if st.button("Recruitment Report"):
             st.session_state.page = "report"
             st.rerun()
 
     with c2:
-        st.image("https://cdn-icons-png.flaticon.com/512/747/747376.png", width=120)
-        if st.button("🔍 Tracking Candidate"):
+        st.image("tracking.png", width=120)
+        if st.button("Tracking Candidate"):
             st.session_state.page = "tracking"
             st.rerun()
 
     with c3:
-        st.image("https://cdn-icons-png.flaticon.com/512/1828/1828817.png", width=120)
+        st.image("dashboard.png", width=120)
         st.button("⚙️ Coming Soon", disabled=True)
 
 # ======================
