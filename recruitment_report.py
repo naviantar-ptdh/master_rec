@@ -3,88 +3,81 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import io
 
-# ======================
-# CONFIG (HARUS PALING ATAS)
-# ======================
+# ==========================================
+# 1. GLOBAL CONFIG (Hanya boleh 1x di awal)
+# ==========================================
 st.set_page_config(
-    page_title="Recruitment Dashboard",
+    page_title="HR Recruitment Portal",
+    page_icon="🎯",
     layout="wide"
 )
 
-# ======================
-# INIT PAGE STATE
-# ======================
-if "page" not in st.session_state:
+# Custom CSS untuk gaya Kartu (Grid) seperti di gambar
+st.markdown("""
+    <style>
+    .stButton button {
+        width: 100%;
+        border-radius: 12px;
+        height: 150px;
+        background-color: #FFFFFF;
+        border: 2px solid #F0F2F6;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .stButton button:hover {
+        border-color: #FF9800;
+        box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    .main-title {
+        text-align: center;
+        font-size: 40px;
+        font-weight: bold;
+        margin-bottom: 30px;
+        color: #333;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# ==========================================
+# 2. SESSION STATE & NAVIGATION
+# ==========================================
+if 'page' not in st.session_state:
     st.session_state.page = "home"
 
-# ======================
-# HELPER
-# ======================
-def create_table_image(df):
-    fig, ax = plt.subplots(figsize=(14, 6))
-    ax.axis('off')
+def go_home():
+    st.session_state.page = "home"
+    st.rerun()
 
-    table = ax.table(
-        cellText=df.values,
-        colLabels=df.columns,
-        rowLabels=df.index if df.index.name else None,
-        loc='center'
-    )
+# ==========================================
+# 3. FUNGSI APLIKASI 1: REC REPORT
+# ==========================================
+def app_recruitment_report():
+    if st.button("⬅ Kembali ke Menu"): go_home()
+    
+    # --- KODE ASLI APP 1 (Rec Report) START ---
+    def create_table_image(df):
+        fig, ax = plt.subplots(figsize=(14, 6))
+        ax.axis('off')
+        table = ax.table(cellText=df.values, colLabels=df.columns, loc='center')
+        table.auto_set_font_size(False)
+        table.set_fontsize(9)
+        table.scale(1, 1.5)
+        buf = io.BytesIO()
+        plt.savefig(buf, bbox_inches='tight')
+        buf.seek(0)
+        return buf
 
-    table.auto_set_font_size(False)
-    table.set_fontsize(9)
-    table.scale(1, 1.5)
+    col_logo, col_title = st.columns([1, 8], vertical_alignment="center")
+    with col_logo: st.image("https://cdn-icons-png.flaticon.com/512/3094/3094837.png", width=70) # Placeholder logo
+    with col_title: st.markdown("<h1 style='margin:0;'>Recruitment Report</h1>", unsafe_allow_html=True)
 
-    buf = io.BytesIO()
-    plt.savefig(buf, bbox_inches='tight')
-    buf.seek(0)
-    return buf
+    if st.button("🔄 Refresh Data"): st.cache_data.clear()
 
-def back_button():
-    if st.button("⬅ Back to Home"):
-        st.session_state.page = "home"
-        st.rerun()
-
-# ======================
-# LANDING PAGE
-# ======================
-if st.session_state.page == "home":
-
-    st.markdown("<h1 style='text-align:center;'>Recruitment Dashboard</h1>", unsafe_allow_html=True)
-
-    c1, c2, c3 = st.columns(3)
-
-    with c1:
-        st.image("report.png", width=120)
-        if st.button("Recruitment Report"):
-            st.session_state.page = "report"
-            st.rerun()
-
-    with c2:
-        st.image("tracking.png", width=120)
-        if st.button("Tracking Candidate"):
-            st.session_state.page = "tracking"
-            st.rerun()
-
-    with c3:
-        st.image("dashboard.png", width=120)
-        st.button("⚙️ Coming Soon", disabled=True)
-
-# =========================================================
-# ====================== REPORT PAGE =======================
-# =========================================================
-elif st.session_state.page == "report":
-
-    back_button()
-
-    # HEADER
-    col_logo, col_title = st.columns([1, 8])
-    with col_logo:
-        st.image("logo_solid.png", width=70)
-    with col_title:
-        st.markdown("<h1>Recruitment Report</h1>", unsafe_allow_html=True)
-
-    # LOAD
     @st.cache_data(ttl=60)
     def load_data():
         url = "https://docs.google.com/spreadsheets/d/1eysrca2wIWsx2LZeP3z2qlRawLzdRBYxsDf6JizcaZc/export?format=csv"
@@ -97,55 +90,31 @@ elif st.session_state.page == "report":
 
     df = load_data()
     mpp = load_mpp()
-
     df.columns = df.columns.str.lower()
     mpp.columns = mpp.columns.str.lower()
 
-    # FILTER
+    st.subheader("Global Filter")
     f1, f2, f3 = st.columns(3)
     lvl_sel = f1.selectbox("Level", ["All"] + sorted(mpp["level"].dropna().unique()))
     loc_sel = f2.selectbox("Location", ["All"] + sorted(mpp["loc"].dropna().unique()))
     st_sel = f3.selectbox("Status", ["All"] + sorted(mpp["status"].dropna().unique()))
 
-    # APPLY
-    mpp_filtered = mpp.copy()
-    if lvl_sel != "All":
-        mpp_filtered = mpp_filtered[mpp_filtered["level"] == lvl_sel]
-    if loc_sel != "All":
-        mpp_filtered = mpp_filtered[mpp_filtered["loc"] == loc_sel]
-    if st_sel != "All":
-        mpp_filtered = mpp_filtered[mpp_filtered["status"] == st_sel]
+    with st.expander("📊 Recruitment Database", expanded=True):
+        filtered_df = df.copy()
+        if lvl_sel != "All": filtered_df = filtered_df[filtered_df["level"] == lvl_sel]
+        st.dataframe(filtered_df, use_container_width=True)
+    # --- KODE ASLI APP 1 END ---
 
-    # ================= MPP
-    with st.expander("📈 MPP Dashboard"):
+# ==========================================
+# 4. FUNGSI APLIKASI 2: TRACKING
+# ==========================================
+def app_tracking_candidate():
+    if st.button("⬅ Kembali ke Menu"): go_home()
 
-        pivot = mpp_filtered.groupby("divisi")[[
-            "2026(r)", "2026(a)", "talent_management", "gap_fullfill_rec"
-        ]].sum()
-
-        pivot.columns = ["MPP", "Existing", "ADP_2026", "GAP"]
-
-        st.dataframe(pivot)
-
-        # ✅ TOTAL FIX
-        total = pivot.sum().to_frame().T
-        total.index = ["TOTAL"]
-
-        st.write("### Total")
-        st.dataframe(total)
-
-# =========================================================
-# ==================== TRACKING PAGE =======================
-# =========================================================
-elif st.session_state.page == "tracking":
-
-    back_button()
-
-    col_logo, col_title = st.columns([1, 8])
-    with col_logo:
-        st.image("logo_solid.png", width=70)
-    with col_title:
-        st.title("Candidate & Position Tracking")
+    # --- KODE ASLI APP 2 (Tracking) START ---
+    col_logo, col_title = st.columns([1, 8], vertical_alignment="center")
+    with col_logo: st.image("https://cdn-icons-png.flaticon.com/512/2643/2643506.png", width=70) # Placeholder logo
+    with col_title: st.title("Candidate & Position Tracking")
 
     @st.cache_data(ttl=60)
     def load_data():
@@ -158,9 +127,53 @@ elif st.session_state.page == "tracking":
     mode = st.radio("Search Mode", ["By Position", "By Candidate"], horizontal=True)
 
     if mode == "By Position":
-        pos = st.selectbox("Select Position", df["position_name"].unique())
-        st.dataframe(df[df["position_name"] == pos])
-
+        pos_list = sorted(df["position_name"].dropna().unique())
+        selected_pos = st.selectbox("Select Position", pos_list)
+        filtered = df[df["position_name"] == selected_pos]
+        st.dataframe(filtered, use_container_width=True)
     else:
-        cand = st.selectbox("Select Candidate", df["candidate_id"].unique())
-        st.dataframe(df[df["candidate_id"] == cand])
+        cand_list = sorted(df["candidate_id"].dropna().unique())
+        selected_cand = st.selectbox("Select Candidate", cand_list)
+        filtered = df[df["candidate_id"] == selected_cand]
+        if not filtered.empty:
+            row = filtered.iloc[0]
+            st.subheader(f"Candidate: {selected_cand}")
+            st.progress(0.5) # Placeholder progress
+    # --- KODE ASLI APP 2 END ---
+
+# ==========================================
+# 5. LANDING PAGE UI
+# ==========================================
+if st.session_state.page == "home":
+    st.markdown("<div class='main-title'>Recruitment Portal</div>", unsafe_allow_html=True)
+    
+    # Layout Grid Kartu
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("### 📊")
+        if st.button("RECRUITMENT\nREPORT"):
+            st.session_state.page = "report"
+            st.rerun()
+
+    with col2:
+        st.markdown("### 🔍")
+        if st.button("TRACKING\nCANDIDATE"):
+            st.session_state.page = "tracking"
+            st.rerun()
+
+    with col3:
+        st.markdown("### ⚙️")
+        st.button("MORE\nCOMING SOON", disabled=True)
+
+    st.markdown("---")
+    st.info("Pilih salah satu menu di atas untuk masuk ke aplikasi.")
+
+# ==========================================
+# 6. ROUTING LOGIC
+# ==========================================
+elif st.session_state.page == "report":
+    app_recruitment_report()
+
+elif st.session_state.page == "tracking":
+    app_tracking_candidate()
