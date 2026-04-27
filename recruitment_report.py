@@ -116,38 +116,45 @@ if st.session_state.page == "home":
     
     st.markdown("---")
     
-    # --- MENU ICON (Sekarang sudah di dalam blok 'if home') ---
+    # --- MENU ICON (DIPERBAIKI AGAR SEJAJAR TENGAH) ---
+    # Membuat 3 kolom untuk menu utama
     c1, c2, c3 = st.columns(3)
 
     with c1:
+        # Menampilkan gambar report (ikon dokumen)
         if os.path.exists("report.png"): 
             st.image("report.png", width=150)
         else: 
             st.markdown("<h1 style='text-align: center;'>📊</h1>", unsafe_allow_html=True)
         
+        # Tombol navigasi ke halaman Report
         if st.button("Recruitment Report", use_container_width=True, key="btn_rep"):
             st.session_state.page = "report"
             st.rerun()
 
     with c2:
+        # Menampilkan gambar tracking (ikon monitor/peta)
         if os.path.exists("tracking.png"): 
             st.image("tracking.png", width=150)
         else: 
             st.markdown("<h1 style='text-align: center;'>🔍</h1>", unsafe_allow_html=True)
             
+        # Tombol navigasi ke halaman Tracking
         if st.button("Tracking Candidate", use_container_width=True, key="btn_track"):
             st.session_state.page = "tracking"
             st.rerun()
 
     with c3:
+        # Menampilkan gambar dashboard (ikon grafik)
         if os.path.exists("dashboard.png"): 
             st.image("dashboard.png", width=150)
         else: 
             st.markdown("<h1 style='text-align: center;'>⚙️</h1>", unsafe_allow_html=True)
             
+        # Tombol Coming Soon (Dinonaktifkan)
         st.button("Coming Soon", disabled=True, use_container_width=True, key="btn_soon")
 
-# --- KONTROL HALAMAN ---
+# --- KONTROL HALAMAN (JANGAN SAMPAI TERPOTONG) ---
 elif st.session_state.page == "report":
     run_rec_report()
 
