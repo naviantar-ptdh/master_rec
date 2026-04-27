@@ -13,12 +13,7 @@ if 'page' not in st.session_state:
 st.set_page_config(page_title="Recruitment System", layout="wide")
 
 # CSS khusus agar tampilan rapi dan tombol seragam
-st.markdown("""
-    <style>
-    .stButton button { border-radius: 10px; }
-    .status-box { padding: 10px; border-radius: 5px; font-weight: bold; text-align: center; }
-    </style>
-    """, unsafe_allow_html=True)
+
 st.markdown("""
     <style>
     /* Mengatur agar semua gambar di dalam kolom otomatis ke tengah */
