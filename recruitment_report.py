@@ -226,23 +226,27 @@ def run_tracking():
 # 3. ROUTING & LANDING PAGE
 # ==========================================
 if st.session_state.page == "home":
-    # Membuat kolom. 'vertical_alignment' memastikan teks tidak "nempel" ke atas logo
-    col_logo, col_title = st.columns([1, 4], vertical_alignment="center")
+    # Membuat 3 kolom: [kiri, tengah, kanan]
+    # Kolom tengah (rasio 3) akan menampung logo dan judul
+    _, center_col, _ = st.columns([1, 3, 1])
 
-    with col_logo:
-        if os.path.exists("logo_solid.png"):
-            st.image("logo_solid.png", width=180) # Ukuran logo agak besar
-        else:
-            st.markdown("### LOGO")
-
-    with col_title:
-        # Menambahkan 'text-align: left' atau 'center' sesuai selera
-        # margin-top diatur agar benar-benar presisi di tengah
-        st.markdown("""
-            <h1 style='text-align: left; margin-bottom: 0; line-height: 1.2;'>
-                HR System Portal
-            </h1>
-            """, unsafe_allow_html=True)
+    with center_col:
+        # Di dalam kolom tengah, bagi lagi menjadi 2 kolom untuk Logo & Teks
+        # vertical_alignment="center" membuat teks sejajar tengah dengan logo
+        col_logo, col_title = st.columns([1, 2], vertical_alignment="center")
+        
+        with col_logo:
+            if os.path.exists("logo_solid.png"):
+                st.image("logo_solid.png", width=120)
+            else:
+                st.markdown("### LOGO")
+        
+        with col_title:
+            st.markdown("""
+                <h1 style='margin: 0; white-space: nowrap;'>
+                    HR System Portal
+                </h1>
+                """, unsafe_allow_html=True)
     
     st.markdown("---")
     
