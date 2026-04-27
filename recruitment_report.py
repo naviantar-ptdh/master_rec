@@ -19,6 +19,19 @@ st.markdown("""
     .status-box { padding: 10px; border-radius: 5px; font-weight: bold; text-align: center; }
     </style>
     """, unsafe_allow_html=True)
+st.markdown("""
+    <style>
+    /* Mengatur agar semua gambar di dalam kolom otomatis ke tengah */
+    [data-testid="stHorizontalBlock"] [data-testid="stImage"] {
+        display: flex;
+        justify-content: center;
+    }
+    /* Mengatur teks tombol agar bold dan rapi */
+    .stButton button {
+        font-weight: bold;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # ==========================================
 # 1. APLIKASI: RECRUITMENT REPORT (100% SAME)
@@ -252,17 +265,31 @@ if st.session_state.page == "home":
     
     # ... sisa kode menu (c1, c2, c3) tetap sama ...
     c1, c2, c3 = st.columns(3)
-    with c1:
-        if os.path.exists("report.png"): st.image("report.png", width=120)
-        if st.button("📊 Recruitment Report", use_container_width=True):
-            st.session_state.page = "report"; st.rerun()
-    with c2:
-        if os.path.exists("tracking.png"): st.image("tracking.png", width=120)
-        if st.button("🔍 Tracking Candidate", use_container_width=True):
-            st.session_state.page = "tracking"; st.rerun()
-    with c3:
-        if os.path.exists("dashboard.png"): st.image("dashboard.png", width=120)
-        st.button("⚙️ Coming Soon", disabled=True, use_container_width=True)
 
-elif st.session_state.page == "report": run_rec_report()
-elif st.session_state.page == "tracking": run_tracking()
+with c1:
+    if os.path.exists("report.png"): 
+        st.image("report.png", width=150) # Ukuran diperbesar sedikit agar pas
+    else: 
+        st.markdown("<h1 style='text-align: center;'>📊</h1>", unsafe_allow_html=True)
+    
+    if st.button("Recruitment Report", use_container_width=True, key="btn_rep"):
+        st.session_state.page = "report"
+        st.rerun()
+
+with c2:
+    if os.path.exists("tracking.png"): 
+        st.image("tracking.png", width=150)
+    else: 
+        st.markdown("<h1 style='text-align: center;'>🔍</h1>", unsafe_allow_html=True)
+        
+    if st.button("Tracking Candidate", use_container_width=True, key="btn_track"):
+        st.session_state.page = "tracking"
+        st.rerun()
+
+with c3:
+    if os.path.exists("dashboard.png"): 
+        st.image("dashboard.png", width=150)
+    else: 
+        st.markdown("<h1 style='text-align: center;'>⚙️</h1>", unsafe_allow_html=True)
+        
+    st.button("Coming Soon", disabled=True, use_container_width=True, key="btn_soon")
