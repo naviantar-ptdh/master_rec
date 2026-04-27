@@ -12,10 +12,9 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Recruitment System", layout="wide")
 
-# CSS untuk centering gambar dan styling tombol
+# CSS agar gambar otomatis ke tengah sejajar tombol
 st.markdown("""
     <style>
-    /* Memaksa semua st.image di dalam kolom untuk ke tengah */
     [data-testid="stHorizontalBlock"] [data-testid="stImage"] {
         display: flex;
         justify-content: center;
@@ -57,7 +56,7 @@ def run_rec_report():
         st.session_state.page = "home"
         st.rerun()
     st.divider()
-
+    
     col_logo, col_title = st.columns([1, 8], vertical_alignment="center")
     with col_logo:
         if os.path.exists("logo_solid.png"): st.image("logo_solid.png", width=70)
@@ -69,7 +68,7 @@ def run_rec_report():
     mpp = load_mpp()
     df.columns = df.columns.str.lower()
     mpp.columns = mpp.columns.str.lower()
-
+    
     st.subheader("Global Filter")
     f1, f2, f3 = st.columns(3)
     lvl_sel = f1.selectbox("Level", ["All"] + sorted(mpp["level"].dropna().unique()), key="l1")
@@ -95,66 +94,41 @@ def run_tracking():
 
     df = load_data()
     df.columns = df.columns.str.lower()
-    
     st.info("Halaman Tracking Aktif")
 
 # ==========================================
-# 3. ROUTING & LANDING PAGE
+# 3. ROUTING & LANDING PAGE (RESET VERSION)
 # ==========================================
 if st.session_state.page == "home":
-    # --- HEADER TENGAH ---
-    _, center_col, _ = st.columns([1, 3, 1])
-    with center_col:
-        col_logo, col_title = st.columns([1, 2], vertical_alignment="center")
-        with col_logo:
-            if os.path.exists("logo_solid.png"): 
-                st.image("logo_solid.png", width=120)
-            else: 
-                st.markdown("### LOGO")
-        with col_title:
-            st.markdown("<h1 style='margin: 0; white-space: nowrap;'>HR System Portal</h1>", unsafe_allow_html=True)
+    # Header sejajar logo & judul
+    col_logo, col_title = st.columns([1, 5], vertical_alignment="center")
+    with col_logo:
+        if os.path.exists("logo_solid.png"): st.image("logo_solid.png", width=120)
+        else: st.markdown("### LOGO")
+    with col_title:
+        st.markdown("<h1 style='margin: 0;'>HR System Portal</h1>", unsafe_allow_html=True)
     
     st.markdown("---")
     
-    # --- MENU ICON (DIPERBAIKI AGAR SEJAJAR TENGAH) ---
-    # Membuat 3 kolom untuk menu utama
+    # Menu Icons
     c1, c2, c3 = st.columns(3)
 
     with c1:
-        # Menampilkan gambar report (ikon dokumen)
-        if os.path.exists("report.png"): 
-            st.image("report.png", width=150)
-        else: 
-            st.markdown("<h1 style='text-align: center;'>📊</h1>", unsafe_allow_html=True)
-        
-        # Tombol navigasi ke halaman Report
-        if st.button("Recruitment Report", use_container_width=True, key="btn_rep"):
+        if os.path.exists("report.png"): st.image("report.png", width=120)
+        if st.button("📊 Recruitment Report", use_container_width=True, key="btn_rep"):
             st.session_state.page = "report"
             st.rerun()
 
     with c2:
-        # Menampilkan gambar tracking (ikon monitor/peta)
-        if os.path.exists("tracking.png"): 
-            st.image("tracking.png", width=150)
-        else: 
-            st.markdown("<h1 style='text-align: center;'>🔍</h1>", unsafe_allow_html=True)
-            
-        # Tombol navigasi ke halaman Tracking
-        if st.button("Tracking Candidate", use_container_width=True, key="btn_track"):
+        if os.path.exists("tracking.png"): st.image("tracking.png", width=120)
+        if st.button("🔍 Tracking Candidate", use_container_width=True, key="btn_track"):
             st.session_state.page = "tracking"
             st.rerun()
 
     with c3:
-        # Menampilkan gambar dashboard (ikon grafik)
-        if os.path.exists("dashboard.png"): 
-            st.image("dashboard.png", width=150)
-        else: 
-            st.markdown("<h1 style='text-align: center;'>⚙️</h1>", unsafe_allow_html=True)
-            
-        # Tombol Coming Soon (Dinonaktifkan)
-        st.button("Coming Soon", disabled=True, use_container_width=True, key="btn_soon")
+        if os.path.exists("dashboard.png"): st.image("dashboard.png", width=120)
+        st.button("⚙️ Coming Soon", disabled=True, use_container_width=True, key="btn_soon")
 
-# --- KONTROL HALAMAN (JANGAN SAMPAI TERPOTONG) ---
 elif st.session_state.page == "report":
     run_rec_report()
 
