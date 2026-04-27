@@ -226,8 +226,24 @@ def run_tracking():
 # 3. ROUTING & LANDING PAGE
 # ==========================================
 if st.session_state.page == "home":
-    st.markdown("<h1 style='text-align:center;'>HR System Portal</h1>", unsafe_allow_html=True)
+    # Membuat 2 kolom untuk Header: kolom 1 untuk logo, kolom 2 untuk judul
+    # Rasio [1, 5] artinya judul punya ruang 5x lebih lebar dari logo
+    col_logo, col_title = st.columns([1, 5], vertical_alignment="center")
+
+    with col_logo:
+        if os.path.exists("logo_solid.png"):
+            # Width bisa diatur (misal 150 atau 200) agar terlihat "agak gede"
+            st.image("logo_solid.png", width=150) 
+        else:
+            st.markdown("### LOGO")
+
+    with col_title:
+        # Menggunakan h1 untuk judul agar ukurannya besar
+        st.markdown("<h1 style='margin-bottom: 0;'>HR System Portal</h1>", unsafe_allow_html=True)
+    
     st.markdown("---")
+    
+    # ... sisa kode menu (c1, c2, c3) tetap sama ...
     c1, c2, c3 = st.columns(3)
     with c1:
         if os.path.exists("report.png"): st.image("report.png", width=120)
