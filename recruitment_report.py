@@ -180,8 +180,9 @@ def run_tracking():
             if v == "CLOSE": return "color: green; font-weight: bold;"
             return ""
 
-        disp["total_lt"] = disp["total_lt"].round(0)
+        
         disp = filtered[["candidate_id","position_name","departement","level","loc","last_progress","total_lt","status1"]].copy()
+        disp["total_lt"] = disp["total_lt"].round(0)
         disp = disp.rename(columns={"status1": "Hiring Status"})
         st.dataframe(disp.style.map(color_st, subset=["Hiring Status"]), use_container_width=True)
         s4, s1, s2, s3 = st.columns(4)
