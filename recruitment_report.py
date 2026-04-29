@@ -134,6 +134,7 @@ def run_rec_report():
         
         mpp_sum = mpp_filtered.groupby(["divisi", "departement"])[["2026(r)","2026(a)","talent_management","gap_fullfill_rec"]].sum(numeric_only=True)
         final = mpp_sum.merge(pipeline.fillna(0), left_on="departement", right_index=True, how="left").fillna(0).reset_index()
+        final.loc['TOTAL'] = final.sum(numeric_only=True)
         st.dataframe(final, use_container_width=True)
         st.download_button("Download Pipeline Image", create_table_image(final), "pipeline.png", "image/png", key="d2")
 
