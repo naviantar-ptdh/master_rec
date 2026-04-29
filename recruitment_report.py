@@ -104,6 +104,7 @@ def run_rec_report():
         pivot_df = mpp_filtered[["divisi","2026(r)","2026(a)","talent_management","gap_fullfill_rec"]].copy()
         pivot_df = pivot_df.rename(columns={"2026(r)": "MPP","2026(a)": "Existing","talent_management": "ADP_2026","gap_fullfill_rec": "GAP"})
         pivot = pivot_df.groupby("divisi").sum(numeric_only=True)
+        pivot.loc['TOTAL'] = pivot.sum(numeric_only=True)
         st.dataframe(pivot, use_container_width=True)
         st.download_button("Download MPP Image", create_table_image(pivot), "mpp.png", "image/png", key="d1")
 
