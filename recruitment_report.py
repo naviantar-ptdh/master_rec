@@ -90,6 +90,14 @@ def run_rec_report():
         k1.metric("Total Candidate", len(df))
         k2.metric("Filtered Candidate", len(filtered_df))
         st.dataframe(filtered_df, use_container_width=True)
+        st.subheader("Candidate Status")
+        s1, s2, s3 = st.columns(3)
+        if "status1" in filtered_df.columns:
+        status_series = filtered_df["status1"].str.upper()
+        s1.metric("On-Progress", (status_series == "OPEN").sum())
+        s2.metric("Failed", (status_series == "FAILED").sum())
+        s3.metric("Hiring", (status_series == "CLOSE").sum())
+        st.dataframe(filtered_df, use_container_width=True)
 
     # SUB 2: MPP DASHBOARD
     with st.expander("📈 MPP Dashboard", expanded=False):
