@@ -92,7 +92,7 @@ def run_rec_report():
         st.dataframe(filtered_df, use_container_width=True)
         st.subheader("Candidate Status")
         s1, s2, s3 = st.columns(3)
-        if "status1" in filtered_df.columns:
+        if "status" in filtered_df.columns:
         status_series = filtered_df["status1"].str.upper()
         s1.metric("On-Progress", (status_series == "OPEN").sum())
         s2.metric("Failed", (status_series == "FAILED").sum())
