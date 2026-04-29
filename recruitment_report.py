@@ -184,8 +184,8 @@ def run_tracking():
         disp = disp.rename(columns={"status1": "Hiring Status"})
         st.dataframe(disp.style.map(color_st, subset=["Hiring Status"]), use_container_width=True)
         s4, s1, s2, s3 = st.columns(4)
-        if "status1" in filtered_df.columns:
-            status_series = filtered_df["status1"].str.upper()
+        if "Hiring Status" in disp.columns:
+            status_series = disp["Hiring Status"].str.upper()
         s1.metric("On-Progress", (status_series == "OPEN").sum())
         s2.metric("Failed", (status_series == "FAILED").sum())
         s3.metric("Hiring", (status_series == "CLOSE").sum())
