@@ -110,14 +110,14 @@ def run_rec_report():
 
     # SUB 3: MPP VS PIPELINE (PENTING!)
     with st.expander("📊 MPP vs Recruitment Pipeline", expanded=False):
-        st.subheader("Pipeline Analysis (By Departement)")
+        st.subheader("Pipeline Analysis (By Divisi)")
         col_d1, col_d2 = st.columns(2)
         start_date = col_d1.date_input("Start Date", key="sd_rep")
         end_date = col_d2.date_input("End Date", key="ed_rep")
         
         df_pipe = df.copy()
-        valid_dept = mpp_filtered["departement"].unique()
-        df_pipe = df_pipe[df_pipe["departement"].isin(valid_dept)]
+        valid_dept = mpp_filtered["divisi"].unique()
+        df_pipe = df_pipe[df_pipe["divisi"].isin(valid_dept)]
         
         date_cols = ["start_screening_cv","start_interview_hr","start_interview_user","start_psychotest","start_offering","start_mcu","start_review_mcu","start_fu_mcu","date_onboarding"]
         for col in date_cols:
@@ -125,15 +125,15 @@ def run_rec_report():
 
         def count_stg(col):
             t = df_pipe[(df_pipe[col] >= pd.to_datetime(start_date)) & (df_pipe[col] <= pd.to_datetime(end_date))]
-            return t.groupby("departement")[col].count()
+            return t.groupby("divisi")[col].count()
 
         pipeline = pd.DataFrame()
         stages = ["Screening CV","HR Interview","User Interview","Psychotest","Offering","MCU","Review MCU","FU MCU","Onboarding"]
         cols = ["start_screening_cv","start_interview_hr","start_interview_user","start_psychotest","start_offering","start_mcu","start_review_mcu","start_fu_mcu","date_onboarding"]
         for s, c in zip(stages, cols): pipeline[s] = count_stg(c)
         
-        mpp_sum = mpp_filtered.groupby(["divisi", "departement"])[["2026(r)","2026(a)","talent_management","gap_fullfill_rec"]].sum(numeric_only=True)
-        final = mpp_sum.merge(pipeline.fillna(0), left_on="departement", right_index=True, how="left").fillna(0).reset_index()
+        mpp_sum = mpp_filtered.groupby(["divisi"])[["2026(r)","2026(a)","talent_management","gap_fullfill_rec"]].sum(numeric_only=True)
+        final = mpp_sum.merge(pipeline.fillna(0), left_on="divisi", right_index=True, how="left").fillna(0).reset_index()
         final.loc['TOTAL'] = final.sum(numeric_only=True)
         st.dataframe(final, use_container_width=True)
         st.download_button("Download Pipeline Image", create_table_image(final), "pipeline.png", "image/png", key="d2")
