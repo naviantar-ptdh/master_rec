@@ -240,8 +240,27 @@ def run_tracking():
         st.progress(done / len(steps))
         st.caption(f"{done}/{len(steps)} steps completed")
 
+
 # ==========================================
-# 3. ROUTING & LANDING PAGE
+# 3. APLIKASI: Steam Dashboard
+# ==========================================
+
+def run_rec_dashboard ():
+    if st.button("⬅ Back to Landing Page", key="back_rep"):
+        st.session_state.page = "home"
+        st.rerun()
+    
+    st.divider()
+    components.html(
+        """
+        <iframe width="800" height="600" src="https://datastudio.google.com/u/0/embed/reporting/a425625f-0af4-4b5c-8826-218a929b1333/page/YwLxF/edit"></iframe>
+        """,
+        height=600
+    )
+
+
+# ==========================================
+# 4. ROUTING & LANDING PAGE
 # ==========================================
 if st.session_state.page == "home":
     # Membuat 3 kolom: [kiri, tengah, kanan]
@@ -280,7 +299,9 @@ if st.session_state.page == "home":
             st.session_state.page = "tracking"; st.rerun()
     with c3:
         if os.path.exists("dashboard.png"): st.image("dashboard.png", width=120)
-        st.button("⚙️ Coming Soon", disabled=True, use_container_width=True)
+        st.button("Recruitment Dashboard", use_container_width=True)
+            st.session_state.page = "dashboard"; st.rerun()
 
 elif st.session_state.page == "report": run_rec_report()
 elif st.session_state.page == "tracking": run_tracking()
+elif st.session_state.page == "dashboard": run_rec_dashboard()
