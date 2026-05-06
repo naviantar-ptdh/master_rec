@@ -242,7 +242,7 @@ def run_tracking():
 
 
 # ==========================================
-# 3. APLIKASI: Steam Dashboard
+# 3. APLIKASI: Stream Dashboard
 # ==========================================
 
 def run_rec_dashboard ():
