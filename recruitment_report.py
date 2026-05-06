@@ -259,7 +259,7 @@ def run_rec_dashboard():
     components.html(
         """
         <iframe width="100%" height="700"
-        src="https://datastudio.google.com/embed/reporting/a425625f-0af4-4b5c-8826-218a929b1333"
+        src="https://datastudio.google.com/embed/reporting/a425625f-0af4-4b5c-8826-218a929b1333/page/YwLxF"
         frameborder="0"
         style="border:0"
         allowfullscreen>
