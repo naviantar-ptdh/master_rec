@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import io
 import os
 import streamlit.components.v1 as components
+from pptx import Presentation
+from pptx.util import Inches
+from datetime import datetime
 
 # ==========================================
 # 0. GLOBAL CONFIG
@@ -32,6 +35,216 @@ def run_rec_report():
     st.divider()
     
     def create_table_image(df):
+    # ==========================================
+    # IMPORT TAMBAHAN
+    # ==========================================
+    from pptx import Presentation
+    from io import BytesIO
+    from datetime import datetime
+    
+    # ==========================================
+    # FUNCTION REPLACE TEXT PPT
+    # ==========================================
+    def replace_text(slide, old_text, new_text):
+    
+        for shape in slide.shapes:
+    
+            if hasattr(shape, "text"):
+    
+                if old_text in shape.text:
+    
+                    shape.text = shape.text.replace(
+                        old_text,
+                        str(new_text)
+                    )
+    
+    # ==========================================
+    # GENERATE PPT FUNCTION
+    # ==========================================
+    def generate_recruitment_ppt(df, mpp_filtered, final):
+    
+        # ======================================
+        # LOAD TEMPLATE
+        # ======================================
+        prs = Presentation("Recruitment Report Template.pptx")
+    
+        # ======================================
+        # SUMMARY DATA
+        # ======================================
+        total_mpp = int(mpp_filtered["2026(r)"].sum())
+        total_existing = int(mpp_filtered["2026(a)"].sum())
+        total_gap = int(mpp_filtered["gap_fullfill_rec"].sum())
+        total_adp = int(mpp_filtered["talent_management"].sum())
+    
+        total_candidate = len(df)
+    
+        open_candidate = (
+            df["status1"]
+            .astype(str)
+            .str.upper()
+            .eq("OPEN")
+            .sum()
+        )
+    
+        close_candidate = (
+            df["status1"]
+            .astype(str)
+            .str.upper()
+            .eq("CLOSE")
+            .sum()
+        )
+    
+        failed_candidate = (
+            df["status1"]
+            .astype(str)
+            .str.upper()
+            .eq("FAILED")
+            .sum()
+        )
+    
+        fit_to_work = 0
+    
+        if "result_fu_mcu" in df.columns:
+    
+            fit_to_work = (
+                df["result_fu_mcu"]
+                .astype(str)
+                .str.upper()
+                .eq("FIT TO WORK")
+                .sum()
+            )
+    
+        # ======================================
+        # PIPELINE SUMMARY
+        # ======================================
+        total_screening = int(final["Screening CV"].sum())
+        total_hr = int(final["HR Interview"].sum())
+        total_user = int(final["User Interview"].sum())
+        total_psycho = int(final["Psychotest"].sum())
+        total_offering = int(final["Offering"].sum())
+        total_mcu = int(final["MCU"].sum())
+        total_review_mcu = int(final["Review MCU"].sum())
+        total_fu_mcu = int(final["FU MCU"].sum())
+        total_onboarding = int(final["Onboarding"].sum())
+    
+        # ======================================
+        # SLIDE 1 - COVER
+        # ======================================
+        slide = prs.slides[0]
+    
+        replace_text(
+            slide,
+            "Fulfillment Staff 2026",
+            f"""
+    Fulfillment Staff 2026
+    
+    Recruitment Report
+    Generated : {datetime.today().strftime('%d %B %Y')}
+    """
+        )
+    
+        # ======================================
+        # SLIDE 2 - MPP & FULFILLMENT
+        # ======================================
+        slide = prs.slides[1]
+    
+        manpower_text = f"""
+    Manpower Plan 2026
+    
+    MPP                : {total_mpp}
+    Existing           : {total_existing}
+    Gap                : {total_gap}
+    """
+    
+        fulfillment_text = f"""
+    Fulfillment Progress
+    
+    ADP 2026           : {total_adp}
+    Total Candidate    : {total_candidate}
+    Hiring             : {close_candidate}
+    Open Process       : {open_candidate}
+    Failed             : {failed_candidate}
+    """
+    
+        replace_text(
+            slide,
+            "Manpower Plan 2026",
+            manpower_text
+        )
+    
+        replace_text(
+            slide,
+            "Fulfillment Progress",
+            fulfillment_text
+        )
+    
+        # ======================================
+        # SLIDE 3 - FIT TO WORK
+        # ======================================
+        slide = prs.slides[2]
+    
+        fit_text = f"""
+    Candidate Fit To Work
+    
+    Total Candidate Fit To Work : {fit_to_work}
+    Total Hiring                : {close_candidate}
+    Open Process                : {open_candidate}
+    """
+    
+        replace_text(
+            slide,
+            "Candidate Fit To Work",
+            fit_text
+        )
+    
+        # ======================================
+        # SLIDE 4 - PIPELINE
+        # ======================================
+        slide = prs.slides[3]
+    
+        pipeline_text = f"""
+    Recruitment Pipeline Summary
+    
+    Screening CV        : {total_screening}
+    HR Interview        : {total_hr}
+    User Interview      : {total_user}
+    Psychotest          : {total_psycho}
+    Offering            : {total_offering}
+    MCU                 : {total_mcu}
+    Review MCU          : {total_review_mcu}
+    FU MCU              : {total_fu_mcu}
+    Onboarding          : {total_onboarding}
+    """
+    
+        replace_text(
+            slide,
+            "PLAN VS ACTUAL 02 Mar – 08 Mar 2026",
+            pipeline_text
+        )
+    
+        # ======================================
+        # REMOVE UNUSED SLIDES
+        # ======================================
+        remove_slides = [4, 5, 6, 7, 8]
+    
+        for idx in sorted(remove_slides, reverse=True):
+    
+            rId = prs.slides._sldIdLst[idx].rId
+    
+            prs.part.drop_rel(rId)
+    
+            del prs.slides._sldIdLst[idx]
+    
+        # ======================================
+        # SAVE PPT TO MEMORY
+        # ======================================
+        ppt_buffer = BytesIO()
+    
+        prs.save(ppt_buffer)
+    
+        ppt_buffer.seek(0)
+    
+        return ppt_buffer
         fig, ax = plt.subplots(figsize=(14, 6))
         ax.axis('off')
         table = ax.table(cellText=df.values, colLabels=df.columns, loc='center')
@@ -138,6 +351,21 @@ def run_rec_report():
         final.loc['TOTAL'] = final.sum(numeric_only=True)
         st.dataframe(final, use_container_width=True)
         st.download_button("Download Pipeline Image", create_table_image(final), "pipeline.png", "image/png", key="d2")
+        # ==========================================
+        # GENERATE PPT BUTTON
+        # ==========================================
+        ppt_file = generate_recruitment_ppt(
+            df,
+            mpp_filtered,
+            final
+        )
+        
+        st.download_button(
+            label="📥 Download Recruitment Report PPT",
+            data=ppt_file,
+            file_name=f"Recruitment_Report_{datetime.today().strftime('%Y%m%d')}.pptx",
+            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
 
 # ==========================================
 # 2. APLIKASI: TRACKING CANDIDATE (100% SAME)
