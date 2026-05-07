@@ -7,6 +7,7 @@ import streamlit.components.v1 as components
 from pptx import Presentation
 from pptx.util import Inches
 from datetime import datetime
+from io import BytesIO
 
 # ==========================================
 # 0. GLOBAL CONFIG
@@ -35,13 +36,18 @@ def run_rec_report():
     st.divider()
     
     def create_table_image(df):
-    # ==========================================
-    # IMPORT TAMBAHAN
-    # ==========================================
-    from pptx import Presentation
-    from io import BytesIO
-    from datetime import datetime
     
+        fig, ax = plt.subplots(figsize=(14, 6))
+        ax.axis('off')
+        table = ax.table(cellText=df.values, colLabels=df.columns, loc='center')
+        table.auto_set_font_size(False)
+        table.set_fontsize(9)
+        table.scale(1, 1.5)
+        buf = io.BytesIO()
+        plt.savefig(buf, bbox_inches='tight')
+        buf.seek(0)
+        return buf
+
     # ==========================================
     # FUNCTION REPLACE TEXT PPT
     # ==========================================
@@ -245,16 +251,7 @@ def run_rec_report():
         ppt_buffer.seek(0)
     
         return ppt_buffer
-        fig, ax = plt.subplots(figsize=(14, 6))
-        ax.axis('off')
-        table = ax.table(cellText=df.values, colLabels=df.columns, loc='center')
-        table.auto_set_font_size(False)
-        table.set_fontsize(9)
-        table.scale(1, 1.5)
-        buf = io.BytesIO()
-        plt.savefig(buf, bbox_inches='tight')
-        buf.seek(0)
-        return buf
+    
 
     col_logo, col_title = st.columns([1, 8], vertical_alignment="center")
     with col_logo:
