@@ -51,207 +51,204 @@ def run_rec_report():
     # ==========================================
     # FUNCTION REPLACE TEXT PPT
     # ==========================================
-    def replace_text(slide, old_text, new_text):
-    
-        for shape in slide.shapes:
-    
-            if hasattr(shape, "text"):
-    
-                if old_text in shape.text:
-    
+    def replace_placeholder(slide, replacements):
+
+    for shape in slide.shapes:
+
+        # ======================
+        # TEXT
+        # ======================
+        if hasattr(shape, "text"):
+
+            for key, value in replacements.items():
+
+                if key in shape.text:
+
                     shape.text = shape.text.replace(
-                        old_text,
-                        str(new_text)
+                        key,
+                        str(value)
                     )
-    
-    # ==========================================
-    # GENERATE PPT FUNCTION
-    # ==========================================
-    def generate_recruitment_ppt(df, mpp_filtered, final):
-    
-        # ======================================
-        # LOAD TEMPLATE
-        # ======================================
-        prs = Presentation("Recruitment Report Template.pptx")
-    
-        # ======================================
-        # SUMMARY DATA
-        # ======================================
-        total_mpp = int(mpp_filtered["2026(r)"].sum())
-        total_existing = int(mpp_filtered["2026(a)"].sum())
-        total_gap = int(mpp_filtered["gap_fullfill_rec"].sum())
-        total_adp = int(mpp_filtered["talent_management"].sum())
-    
-        total_candidate = len(df)
-    
-        open_candidate = (
-            df["status1"]
+
+        # ======================
+        # TABLE
+        # ======================
+        if shape.has_table:
+
+            table = shape.table
+
+            for row in table.rows:
+
+                for cell in row.cells:
+
+                    for key, value in replacements.items():
+
+                        if key in cell.text:
+
+                            cell.text = cell.text.replace(
+                                key,
+                                str(value)
+                            )
+
+# ==========================================
+# FUNCTION GENERATE PPT
+# ==========================================
+def generate_recruitment_ppt(df, mpp_filtered, final):
+
+    prs = Presentation(
+        "Recruitment Report Template.pptx"
+    )
+
+    # ======================================
+    # SITE LIST
+    # ======================================
+    sites = ["BCP", "KCP", "ACP", "JKT"]
+
+    # ======================================
+    # LOOP PER SITE
+    # ======================================
+    for idx, site in enumerate(sites):
+
+        # ==================================
+        # FILTER DATA
+        # ==================================
+        site_mpp = mpp_filtered[
+            mpp_filtered["loc"]
             .astype(str)
             .str.upper()
-            .eq("OPEN")
-            .sum()
-        )
-    
-        close_candidate = (
-            df["status1"]
+            .eq(site)
+        ].copy()
+
+        site_df = df[
+            df["loc"]
             .astype(str)
             .str.upper()
-            .eq("CLOSE")
-            .sum()
+            .eq(site)
+        ].copy()
+
+        site_pipeline = final[
+            final["divisi"]
+            .isin(site_mpp["divisi"])
+        ].copy()
+
+        # ==================================
+        # SLIDE SUMMARY
+        # ==================================
+        summary_slide = prs.slides[idx * 3]
+
+        replacements = {}
+
+        letters = list("ABCDEFGHIJKL")
+
+        site_mpp = site_mpp.reset_index(drop=True)
+
+        for i, letter in enumerate(letters):
+
+            if i < len(site_mpp):
+
+                row = site_mpp.iloc[i]
+
+                replacements[f"{{{{{letter}}}}}"] = row.get("departement", "")
+                replacements[f"{{{{MPP_{letter}}}}}"] = row.get("2026(r)", 0)
+                replacements[f"{{{{ACT_{letter}}}}}"] = row.get("2026(a)", 0)
+                replacements[f"{{{{DEV_{letter}}}}}"] = row.get("gap_fullfill_rec", 0)
+                replacements[f"{{{{ADP_{letter}}}}}"] = row.get("talent_management", 0)
+                replacements[f"{{{{EXT_{letter}}}}}"] = row.get("ext", 0)
+
+        replace_placeholder(
+            summary_slide,
+            replacements
         )
-    
-        failed_candidate = (
-            df["status1"]
+
+        # ==================================
+        # FIT TO WORK SLIDE
+        # ==================================
+        fit_slide = prs.slides[(idx * 3) + 1]
+
+        replacements = {}
+
+        fit_df = site_df[
+            site_df["result_fu_mcu"]
             .astype(str)
             .str.upper()
-            .eq("FAILED")
-            .sum()
+            .eq("FIT TO WORK")
+        ].copy()
+
+        fit_df = fit_df.reset_index(drop=True)
+
+        letters = list("ABCDEFGHIJKL")
+
+        for i, letter in enumerate(letters):
+
+            if i < len(fit_df):
+
+                row = fit_df.iloc[i]
+
+                replacements[f"{{{{{letter}}}}}"] = row.get("candidate_name", "")
+                replacements[f"{{{{loc_{letter}}}}}"] = row.get("loc", "")
+                replacements[f"{{{{Pos_{letter}}}}}"] = row.get("position_name", "")
+                replacements[f"{{{{dep_{letter}}}}}"] = row.get("departement", "")
+                replacements[f"{{{{result_{letter}}}}}"] = row.get("result_fu_mcu", "")
+                replacements[f"{{{{date_{letter}}}}}"] = row.get("date_onboarding", "")
+
+        replace_placeholder(
+            fit_slide,
+            replacements
         )
-    
-        fit_to_work = 0
-    
-        if "result_fu_mcu" in df.columns:
-    
-            fit_to_work = (
-                df["result_fu_mcu"]
-                .astype(str)
-                .str.upper()
-                .eq("FIT TO WORK")
-                .sum()
-            )
-    
-        # ======================================
-        # PIPELINE SUMMARY
-        # ======================================
-        total_screening = int(final["Screening CV"].sum())
-        total_hr = int(final["HR Interview"].sum())
-        total_user = int(final["User Interview"].sum())
-        total_psycho = int(final["Psychotest"].sum())
-        total_offering = int(final["Offering"].sum())
-        total_mcu = int(final["MCU"].sum())
-        total_review_mcu = int(final["Review MCU"].sum())
-        total_fu_mcu = int(final["FU MCU"].sum())
-        total_onboarding = int(final["Onboarding"].sum())
-    
-        # ======================================
-        # SLIDE 1 - COVER
-        # ======================================
-        slide = prs.slides[0]
-    
-        replace_text(
-            slide,
-            "Fulfillment Staff 2026",
-            f"""
-    Fulfillment Staff 2026
-    
-    Recruitment Report
-    Generated : {datetime.today().strftime('%d %B %Y')}
-    """
+
+        # ==================================
+        # PIPELINE SLIDE
+        # ==================================
+        pipe_slide = prs.slides[(idx * 3) + 2]
+
+        replacements = {}
+
+        total_screening = int(site_pipeline["Screening CV"].sum()) if "Screening CV" in site_pipeline.columns else 0
+        total_hr = int(site_pipeline["HR Interview"].sum()) if "HR Interview" in site_pipeline.columns else 0
+        total_user = int(site_pipeline["User Interview"].sum()) if "User Interview" in site_pipeline.columns else 0
+        total_psy = int(site_pipeline["Psychotest"].sum()) if "Psychotest" in site_pipeline.columns else 0
+        total_offering = int(site_pipeline["Offering"].sum()) if "Offering" in site_pipeline.columns else 0
+        total_mcu = int(site_pipeline["MCU"].sum()) if "MCU" in site_pipeline.columns else 0
+        total_review = int(site_pipeline["Review MCU"].sum()) if "Review MCU" in site_pipeline.columns else 0
+        total_fu = int(site_pipeline["FU MCU"].sum()) if "FU MCU" in site_pipeline.columns else 0
+        total_onboard = int(site_pipeline["Onboarding"].sum()) if "Onboarding" in site_pipeline.columns else 0
+
+        replacements["{{screening}}"] = total_screening
+        replacements["{{hr}}"] = total_hr
+        replacements["{{user}}"] = total_user
+        replacements["{{psy}}"] = total_psy
+        replacements["{{offering}}"] = total_offering
+        replacements["{{mcu}}"] = total_mcu
+        replacements["{{review}}"] = total_review
+        replacements["{{fu}}"] = total_fu
+        replacements["{{onboarding}}"] = total_onboard
+
+        # plan kosong
+        replacements["{{plan_screening}}"] = ""
+        replacements["{{plan_hr}}"] = ""
+        replacements["{{plan_user}}"] = ""
+        replacements["{{plan_psy}}"] = ""
+        replacements["{{plan_offering}}"] = ""
+        replacements["{{plan_mcu}}"] = ""
+        replacements["{{plan_review}}"] = ""
+        replacements["{{plan_fu}}"] = ""
+        replacements["{{plan_onboarding}}"] = ""
+
+        replace_placeholder(
+            pipe_slide,
+            replacements
         )
-    
-        # ======================================
-        # SLIDE 2 - MPP & FULFILLMENT
-        # ======================================
-        slide = prs.slides[1]
-    
-        manpower_text = f"""
-    Manpower Plan 2026
-    
-    MPP                : {total_mpp}
-    Existing           : {total_existing}
-    Gap                : {total_gap}
-    """
-    
-        fulfillment_text = f"""
-    Fulfillment Progress
-    
-    ADP 2026           : {total_adp}
-    Total Candidate    : {total_candidate}
-    Hiring             : {close_candidate}
-    Open Process       : {open_candidate}
-    Failed             : {failed_candidate}
-    """
-    
-        replace_text(
-            slide,
-            "Manpower Plan 2026",
-            manpower_text
-        )
-    
-        replace_text(
-            slide,
-            "Fulfillment Progress",
-            fulfillment_text
-        )
-    
-        # ======================================
-        # SLIDE 3 - FIT TO WORK
-        # ======================================
-        slide = prs.slides[2]
-    
-        fit_text = f"""
-    Candidate Fit To Work
-    
-    Total Candidate Fit To Work : {fit_to_work}
-    Total Hiring                : {close_candidate}
-    Open Process                : {open_candidate}
-    """
-    
-        replace_text(
-            slide,
-            "Candidate Fit To Work",
-            fit_text
-        )
-    
-        # ======================================
-        # SLIDE 4 - PIPELINE
-        # ======================================
-        slide = prs.slides[3]
-    
-        pipeline_text = f"""
-    Recruitment Pipeline Summary
-    
-    Screening CV        : {total_screening}
-    HR Interview        : {total_hr}
-    User Interview      : {total_user}
-    Psychotest          : {total_psycho}
-    Offering            : {total_offering}
-    MCU                 : {total_mcu}
-    Review MCU          : {total_review_mcu}
-    FU MCU              : {total_fu_mcu}
-    Onboarding          : {total_onboarding}
-    """
-    
-        replace_text(
-            slide,
-            "PLAN VS ACTUAL 02 Mar – 08 Mar 2026",
-            pipeline_text
-        )
-    
-        # ======================================
-        # REMOVE UNUSED SLIDES
-        # ======================================
-        remove_slides = [4, 5, 6, 7, 8]
-    
-        for idx in sorted(remove_slides, reverse=True):
-    
-            rId = prs.slides._sldIdLst[idx].rId
-    
-            prs.part.drop_rel(rId)
-    
-            del prs.slides._sldIdLst[idx]
-    
-        # ======================================
-        # SAVE PPT TO MEMORY
-        # ======================================
-        ppt_buffer = BytesIO()
-    
-        prs.save(ppt_buffer)
-    
-        ppt_buffer.seek(0)
-    
-        return ppt_buffer
-    
+
+    # ======================================
+    # SAVE PPT
+    # ======================================
+    ppt_buffer = BytesIO()
+
+    prs.save(ppt_buffer)
+
+    ppt_buffer.seek(0)
+
+    return ppt_buffer
+
 
     col_logo, col_title = st.columns([1, 8], vertical_alignment="center")
     with col_logo:
