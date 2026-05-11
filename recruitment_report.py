@@ -201,7 +201,7 @@ def run_rec_report():
                 for _, row in fit_df.iterrows():
     
                     fit_data.append([
-                        row.get("candidate_name", ""),
+                        row.get("candidate_id", ""),
                         row.get("loc", ""),
                         row.get("position_name", ""),
                         row.get("divisi", ""),
