@@ -154,7 +154,7 @@ def run_rec_report():
                     onboard = int(div_pipeline["Onboarding"].sum()) if not div_pipeline.empty else 0
     
                     table_data.append([
-                        row.get("departement", ""),
+                        row.get("divisi", ""),
                         row.get("2026(r)", 0),
                         row.get("2026(a)", 0),
                         row.get("gap_fullfill_rec", 0),
@@ -204,7 +204,7 @@ def run_rec_report():
                         row.get("candidate_name", ""),
                         row.get("loc", ""),
                         row.get("position_name", ""),
-                        row.get("departement", ""),
+                        row.get("divisi", ""),
                         row.get("result_fu_mcu", ""),
                         row.get("date_onboarding", "")
                     ])
