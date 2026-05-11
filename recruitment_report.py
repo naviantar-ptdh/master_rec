@@ -77,9 +77,6 @@ def run_rec_report():
     
         letters = list("ABCDEFGHIJKL")
     
-        # ======================================
-        # SITE NORMAL (3 SLIDE)
-        # ======================================
         normal_sites = [
             ("BCP", 1),
             ("KCP", 4),
@@ -87,7 +84,7 @@ def run_rec_report():
         ]
     
         # ======================================
-        # LOOP SITE NORMAL
+        # LOOP SITE
         # ======================================
         for site, start_idx in normal_sites:
     
@@ -119,7 +116,7 @@ def run_rec_report():
             )
     
             # ======================================
-            # SUMMARY
+            # SUMMARY REPLACEMENT
             # ======================================
             replacements = {}
     
@@ -128,6 +125,10 @@ def run_rec_report():
                 if i < len(site_mpp):
     
                     row = site_mpp.iloc[i]
+    
+                    div_pipeline = final[
+                        final["divisi"] == row["divisi"]
+                    ]
     
                     replacements[f"{{{{{letter}}}}}"] = str(
                         row.get("divisi", "")
@@ -152,35 +153,33 @@ def run_rec_report():
                     replacements[f"{{{{EXT_{letter}}}}}"] = str(
                         row.get("ext", 0)
                     )
-                    div_pipeline = final[
-                        final["divisi"] == row["divisi"]
-                    ]
-                    
+    
                     replacements[f"{{{{int_{letter}}}}}"] = str(
                         int(div_pipeline["HR Interview"].sum())
                         if not div_pipeline.empty else 0
                     )
-                    
+    
                     replacements[f"{{{{psy_{letter}}}}}"] = str(
                         int(div_pipeline["Psychotest"].sum())
                         if not div_pipeline.empty else 0
                     )
-                    
-                    replacements[f"{{{{offe_{letter}}}}}"] = str(
+    
+                    # FIX TYPO HERE
+                    replacements[f"{{{{ofe_{letter}}}}}"] = str(
                         int(div_pipeline["Offering"].sum())
                         if not div_pipeline.empty else 0
                     )
-                    
+    
                     replacements[f"{{{{mcu_{letter}}}}}"] = str(
                         int(div_pipeline["MCU"].sum())
                         if not div_pipeline.empty else 0
                     )
-                    
+    
                     replacements[f"{{{{devf_{letter}}}}}"] = str(
-                        int(div_pipeline["gap_fullfill_rec"].sum())
-                        if not div_pipeline.empty else 0
+                        int(row.get("gap_fullfill_rec", 0))
                     )
     
+            # REPLACE SUMMARY
             for shape in summary_slide.shapes:
     
                 if shape.has_table:
@@ -245,6 +244,7 @@ def run_rec_report():
                         row.get("date_onboarding", "")
                     )
     
+            # REPLACE FIT SLIDE
             for shape in fit_slide.shapes:
     
                 if shape.has_table:
@@ -265,17 +265,17 @@ def run_rec_report():
                                     )
     
             # ======================================
-            # PIPELINE
+            # PIPELINE SLIDE
             # ======================================
-            total_screening = int(site_df["start_screening_cv"].notna().sum()) if "start_screening_cv" in site_df.columns else 0
-            total_hr = int(site_df["start_interview_hr"].notna().sum()) if "start_interview_hr" in site_df.columns else 0
-            total_user = int(site_df["start_interview_user"].notna().sum()) if "start_interview_user" in site_df.columns else 0
-            total_psy = int(site_df["start_psychotest"].notna().sum()) if "start_psychotest" in site_df.columns else 0
-            total_offer = int(site_df["start_offering"].notna().sum()) if "start_offering" in site_df.columns else 0
-            total_mcu = int(site_df["start_mcu"].notna().sum()) if "start_mcu" in site_df.columns else 0
-            total_review = int(site_df["start_review_mcu"].notna().sum()) if "start_review_mcu" in site_df.columns else 0
-            total_fu = int(site_df["start_fu_mcu"].notna().sum()) if "start_fu_mcu" in site_df.columns else 0
-            total_onboard = int(site_df["date_onboarding"].notna().sum()) if "date_onboarding" in site_df.columns else 0
+            total_screening = int(site_df["start_screening_cv"].notna().sum())
+            total_hr = int(site_df["start_interview_hr"].notna().sum())
+            total_user = int(site_df["start_interview_user"].notna().sum())
+            total_psy = int(site_df["start_psychotest"].notna().sum())
+            total_offer = int(site_df["start_offering"].notna().sum())
+            total_mcu = int(site_df["start_mcu"].notna().sum())
+            total_review = int(site_df["start_review_mcu"].notna().sum())
+            total_fu = int(site_df["start_fu_mcu"].notna().sum())
+            total_onboard = int(site_df["date_onboarding"].notna().sum())
     
             for shape in pipeline_slide.shapes:
     
@@ -298,7 +298,7 @@ def run_rec_report():
     """
     
         # ======================================
-        # JKT SLIDE (ONLY 1 SLIDE)
+        # JKT SLIDE
         # ======================================
         jkt_slide = prs.slides[10]
     
@@ -323,7 +323,7 @@ def run_rec_report():
                     )
     
         # ======================================
-        # SAVE PPT
+        # SAVE
         # ======================================
         ppt_buffer = BytesIO()
     
