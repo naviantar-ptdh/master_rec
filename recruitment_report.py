@@ -152,6 +152,34 @@ def run_rec_report():
                     replacements[f"{{{{EXT_{letter}}}}}"] = str(
                         row.get("ext", 0)
                     )
+                    div_pipeline = final[
+                        final["divisi"] == row["divisi"]
+                    ]
+                    
+                    replacements[f"{{{{int_{letter}}}}}"] = str(
+                        int(div_pipeline["HR Interview"].sum())
+                        if not div_pipeline.empty else 0
+                    )
+                    
+                    replacements[f"{{{{psy_{letter}}}}}"] = str(
+                        int(div_pipeline["Psychotest"].sum())
+                        if not div_pipeline.empty else 0
+                    )
+                    
+                    replacements[f"{{{{offe_{letter}}}}}"] = str(
+                        int(div_pipeline["Offering"].sum())
+                        if not div_pipeline.empty else 0
+                    )
+                    
+                    replacements[f"{{{{mcu_{letter}}}}}"] = str(
+                        int(div_pipeline["MCU"].sum())
+                        if not div_pipeline.empty else 0
+                    )
+                    
+                    replacements[f"{{{{devf_{letter}}}}}"] = str(
+                        int(div_pipeline["gap_fullfill_rec"].sum())
+                        if not div_pipeline.empty else 0
+                    )
     
             for shape in summary_slide.shapes:
     
