@@ -48,7 +48,7 @@ def run_rec_report():
         buf.seek(0)
         return buf
 
-       # ==========================================
+    # ==========================================
     # FUNCTION FILL TABLE
     # ==========================================
     def fill_table(table, data, start_row=1):
