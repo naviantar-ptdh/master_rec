@@ -48,11 +48,11 @@ def run_rec_report():
         buf.seek(0)
         return buf
 
-        # ==========================================
-    # FUNCTION fill
+       # ==========================================
+    # FUNCTION FILL TABLE
     # ==========================================
     def fill_table(table, data, start_row=1):
-
+    
         for i, row_data in enumerate(data):
     
             row_idx = start_row + i
@@ -66,171 +66,165 @@ def run_rec_report():
                     break
     
                 table.cell(row_idx, col_idx).text = str(value)
-
+    
+    
     # ==========================================
     # FUNCTION GENERATE PPT
     # ==========================================
     def generate_recruitment_ppt(df, mpp_filtered, final):
-
-                prs = Presentation("Recruitment Report Template.pptx")
-            
-                sites = ["BCP", "KCP", "ACP", "JKT"]
-            
-                for idx, site in enumerate(sites):
-            
-                    # ======================================
-                    # FILTER DATA
-                    # ======================================
-                    site_mpp = mpp_filtered[
-                        mpp_filtered["loc"]
-                        .astype(str)
-                        .str.upper()
-                        == site
-                    ].reset_index(drop=True)
-            
-                    site_df = df[
-                        df["loc"]
-                        .astype(str)
-                        .str.upper()
-                        == site
-                    ].reset_index(drop=True)
-            
-                    site_pipeline = final[
-                        final["divisi"].isin(site_mpp["divisi"])
+    
+        prs = Presentation("Recruitment Report Template.pptx")
+    
+        sites = ["BCP", "KCP", "ACP", "JKT"]
+    
+        # ======================================
+        # START AFTER COVER
+        # COVER = SLIDE 0
+        # ======================================
+        start_slide = 1
+    
+        for idx, site in enumerate(sites):
+    
+            # ======================================
+            # SLIDE POSITION
+            # ======================================
+            summary_idx = start_slide + (idx * 3)
+            fit_idx = summary_idx + 1
+            pipeline_idx = summary_idx + 2
+    
+            # ======================================
+            # FILTER DATA
+            # ======================================
+            site_mpp = mpp_filtered[
+                mpp_filtered["loc"]
+                .astype(str)
+                .str.upper()
+                == site
+            ].reset_index(drop=True)
+    
+            site_df = df[
+                df["loc"]
+                .astype(str)
+                .str.upper()
+                == site
+            ].reset_index(drop=True)
+    
+            site_pipeline = final[
+                final["divisi"].isin(site_mpp["divisi"])
+            ]
+    
+            # ======================================
+            # SUMMARY SLIDE
+            # ======================================
+            slide_summary = prs.slides[summary_idx]
+    
+            summary_table = None
+    
+            for shape in slide_summary.shapes:
+                if shape.has_table:
+                    summary_table = shape.table
+                    break
+    
+            if summary_table:
+    
+                table_data = []
+    
+                for _, row in site_mpp.iterrows():
+    
+                    div_pipeline = final[
+                        final["divisi"] == row["divisi"]
                     ]
-            
-                    # ======================================
-                    # SLIDE 1 : SUMMARY
-                    # ======================================
-                    slide1 = prs.slides[idx * 3]
-            
-                    summary_table = None
-            
-                    for shape in slide1.shapes:
-                        if shape.has_table:
-                            summary_table = shape.table
-                            break
-            
-                    if summary_table:
-            
-                        table_data = []
-            
-                        for _, row in site_mpp.iterrows():
-            
-                            div_pipeline = final[
-                                final["divisi"] == row["divisi"]
-                            ]
-            
-                            hr = (
-                                int(div_pipeline["HR Interview"].sum())
-                                if not div_pipeline.empty else 0
-                            )
-            
-                            psy = (
-                                int(div_pipeline["Psychotest"].sum())
-                                if not div_pipeline.empty else 0
-                            )
-            
-                            offer = (
-                                int(div_pipeline["Offering"].sum())
-                                if not div_pipeline.empty else 0
-                            )
-            
-                            mcu = (
-                                int(div_pipeline["MCU"].sum())
-                                if not div_pipeline.empty else 0
-                            )
-            
-                            onboard = (
-                                int(div_pipeline["Onboarding"].sum())
-                                if not div_pipeline.empty else 0
-                            )
-            
-                            table_data.append([
-                                row.get("departement", ""),
-                                row.get("2026(r)", 0),
-                                row.get("2026(a)", 0),
-                                row.get("gap_fullfill_rec", 0),
-                                row.get("talent_management", 0),
-                                row.get("ext", 0),
-                                hr,
-                                psy,
-                                offer,
-                                mcu,
-                                onboard
-                            ])
-            
-                        fill_table(summary_table, table_data)
-            
-                    # ======================================
-                    # SLIDE 2 : FIT TO WORK
-                    # ======================================
-                    slide2 = prs.slides[(idx * 3) + 1]
-            
-                    fit_table = None
-            
-                    for shape in slide2.shapes:
-                        if shape.has_table:
-                            fit_table = shape.table
-                            break
-            
-                    if fit_table:
-            
-                        fit_df = site_df[
-                            site_df["result_fu_mcu"]
-                            .astype(str)
-                            .str.upper()
-                            == "FIT TO WORK"
-                        ]
-            
-                        fit_data = []
-            
-                        for _, row in fit_df.iterrows():
-            
-                            fit_data.append([
-                                row.get("candidate_name", ""),
-                                row.get("loc", ""),
-                                row.get("position_name", ""),
-                                row.get("departement", ""),
-                                row.get("result_fu_mcu", ""),
-                                row.get("date_onboarding", "")
-                            ])
-            
-                        fill_table(fit_table, fit_data)
-            
-                    # ======================================
-                    # SLIDE 3 : PIPELINE
-                    # ======================================
-                    slide3 = prs.slides[(idx * 3) + 2]
-            
-                    for shape in slide3.shapes:
-            
-                        if hasattr(shape, "text"):
-            
-                            shape.text = shape.text.replace(
-                                "PLAN VS ACTUAL 02 Mar – 08 Mar 2026",
-                                f"""
-            PLAN VS ACTUAL
-            
-            Screening CV : {int(site_pipeline["Screening CV"].sum())}
-            HR Interview : {int(site_pipeline["HR Interview"].sum())}
-            User Interview : {int(site_pipeline["User Interview"].sum())}
-            Psychotest : {int(site_pipeline["Psychotest"].sum())}
-            Offering : {int(site_pipeline["Offering"].sum())}
-            MCU : {int(site_pipeline["MCU"].sum())}
-            Review MCU : {int(site_pipeline["Review MCU"].sum())}
-            FU MCU : {int(site_pipeline["FU MCU"].sum())}
-            Onboarding : {int(site_pipeline["Onboarding"].sum())}
-            """
-                            )
-            
-                ppt_buffer = BytesIO()
-            
-                prs.save(ppt_buffer)
-            
-                ppt_buffer.seek(0)
-            
-                return ppt_buffer
+    
+                    hr = int(div_pipeline["HR Interview"].sum()) if not div_pipeline.empty else 0
+                    psy = int(div_pipeline["Psychotest"].sum()) if not div_pipeline.empty else 0
+                    offer = int(div_pipeline["Offering"].sum()) if not div_pipeline.empty else 0
+                    mcu = int(div_pipeline["MCU"].sum()) if not div_pipeline.empty else 0
+                    onboard = int(div_pipeline["Onboarding"].sum()) if not div_pipeline.empty else 0
+    
+                    table_data.append([
+                        row.get("departement", ""),
+                        row.get("2026(r)", 0),
+                        row.get("2026(a)", 0),
+                        row.get("gap_fullfill_rec", 0),
+                        row.get("talent_management", 0),
+                        row.get("ext", 0),
+                        hr,
+                        psy,
+                        offer,
+                        mcu,
+                        onboard
+                    ])
+    
+                fill_table(summary_table, table_data)
+    
+            # ======================================
+            # FIT TO WORK SLIDE
+            # ======================================
+            slide_fit = prs.slides[fit_idx]
+    
+            fit_table = None
+    
+            for shape in slide_fit.shapes:
+                if shape.has_table:
+                    fit_table = shape.table
+                    break
+    
+            if fit_table:
+    
+                fit_df = site_df[
+                    site_df["result_fu_mcu"]
+                    .astype(str)
+                    .str.upper()
+                    == "FIT TO WORK"
+                ].reset_index(drop=True)
+    
+                fit_data = []
+    
+                for _, row in fit_df.iterrows():
+    
+                    fit_data.append([
+                        row.get("candidate_name", ""),
+                        row.get("loc", ""),
+                        row.get("position_name", ""),
+                        row.get("departement", ""),
+                        row.get("result_fu_mcu", ""),
+                        row.get("date_onboarding", "")
+                    ])
+    
+                fill_table(fit_table, fit_data)
+    
+            # ======================================
+            # PIPELINE SLIDE
+            # ======================================
+            slide_pipe = prs.slides[pipeline_idx]
+    
+            for shape in slide_pipe.shapes:
+    
+                if hasattr(shape, "text"):
+    
+                    if "PLAN VS ACTUAL" in shape.text:
+    
+                        shape.text = f"""
+    PLAN VS ACTUAL
+    
+    Screening CV : {int(site_pipeline["Screening CV"].sum())}
+    HR Interview : {int(site_pipeline["HR Interview"].sum())}
+    User Interview : {int(site_pipeline["User Interview"].sum())}
+    Psychotest : {int(site_pipeline["Psychotest"].sum())}
+    Offering : {int(site_pipeline["Offering"].sum())}
+    MCU : {int(site_pipeline["MCU"].sum())}
+    Review MCU : {int(site_pipeline["Review MCU"].sum())}
+    FU MCU : {int(site_pipeline["FU MCU"].sum())}
+    Onboarding : {int(site_pipeline["Onboarding"].sum())}
+    """
+    
+        ppt_buffer = BytesIO()
+    
+        prs.save(ppt_buffer)
+    
+        ppt_buffer.seek(0)
+    
+        return ppt_buffer
                 
     col_logo, col_title = st.columns([1, 8], vertical_alignment="center")
     with col_logo:
