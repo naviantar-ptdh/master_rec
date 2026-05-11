@@ -72,25 +72,37 @@ def run_rec_report():
     # FUNCTION GENERATE PPT
     # ==========================================
     def generate_recruitment_ppt(df, mpp_filtered, final):
-    
+
         prs = Presentation("Recruitment Report Template.pptx")
     
-        sites = ["BCP", "KCP", "ACP", "JKT"]
+        # ======================================
+        # SITE CONFIG
+        # ======================================
+        site_config = {
+            "BCP": {
+                "summary": 1,
+                "fit": 2,
+                "pipeline": 3
+            },
+            "KCP": {
+                "summary": 4,
+                "fit": 5,
+                "pipeline": 6
+            },
+            "ACP": {
+                "summary": 7,
+                "fit": 8,
+                "pipeline": 9
+            },
+            "JKT": {
+                "summary": 10
+            }
+        }
     
         # ======================================
-        # START AFTER COVER
-        # COVER = SLIDE 0
+        # LOOP SITE
         # ======================================
-        start_slide = 1
-    
-        for idx, site in enumerate(sites):
-    
-            # ======================================
-            # SLIDE POSITION
-            # ======================================
-            summary_idx = start_slide + (idx * 3)
-            fit_idx = summary_idx + 1
-            pipeline_idx = summary_idx + 2
+        for site, slides in site_config.items():
     
             # ======================================
             # FILTER DATA
@@ -116,7 +128,7 @@ def run_rec_report():
             # ======================================
             # SUMMARY SLIDE
             # ======================================
-            slide_summary = prs.slides[summary_idx]
+            slide_summary = prs.slides[slides["summary"]]
     
             summary_table = None
     
@@ -158,9 +170,15 @@ def run_rec_report():
                 fill_table(summary_table, table_data)
     
             # ======================================
+            # JKT ONLY SUMMARY
+            # ======================================
+            if site == "JKT":
+                continue
+    
+            # ======================================
             # FIT TO WORK SLIDE
             # ======================================
-            slide_fit = prs.slides[fit_idx]
+            slide_fit = prs.slides[slides["fit"]]
     
             fit_table = None
     
@@ -196,7 +214,7 @@ def run_rec_report():
             # ======================================
             # PIPELINE SLIDE
             # ======================================
-            slide_pipe = prs.slides[pipeline_idx]
+            slide_pipe = prs.slides[slides["pipeline"]]
     
             for shape in slide_pipe.shapes:
     
@@ -218,6 +236,9 @@ def run_rec_report():
     Onboarding : {int(site_pipeline["Onboarding"].sum())}
     """
     
+        # ======================================
+        # SAVE PPT
+        # ======================================
         ppt_buffer = BytesIO()
     
         prs.save(ppt_buffer)
