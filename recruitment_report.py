@@ -130,7 +130,7 @@ def run_rec_report():
                     row = site_mpp.iloc[i]
     
                     replacements[f"{{{{{letter}}}}}"] = str(
-                        row.get("departement", "")
+                        row.get("divisi", "")
                     )
     
                     replacements[f"{{{{MPP_{letter}}}}}"] = str(
@@ -206,7 +206,7 @@ def run_rec_report():
                     )
     
                     replacements[f"{{{{dep_{letter}}}}}"] = str(
-                        row.get("departement", "")
+                        row.get("divisi", "")
                     )
     
                     replacements[f"{{{{result_{letter}}}}}"] = str(
