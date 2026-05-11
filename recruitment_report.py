@@ -73,237 +73,237 @@ def run_rec_report():
     # ==========================================
     def generate_recruitment_ppt(df, mpp_filtered, final):
 
-    prs = Presentation("Recruitment Report Template.pptx")
-
-    letters = list("ABCDEFGHIJKL")
-
-    # ======================================
-    # SITE NORMAL (3 SLIDE)
-    # ======================================
-    normal_sites = [
-        ("BCP", 1),
-        ("KCP", 4),
-        ("ACP", 7),
-    ]
-
-    # ======================================
-    # LOOP SITE NORMAL
-    # ======================================
-    for site, start_idx in normal_sites:
-
-        summary_slide = prs.slides[start_idx]
-        fit_slide = prs.slides[start_idx + 1]
-        pipeline_slide = prs.slides[start_idx + 2]
-
+        prs = Presentation("Recruitment Report Template.pptx")
+    
+        letters = list("ABCDEFGHIJKL")
+    
         # ======================================
-        # FILTER DATA
+        # SITE NORMAL (3 SLIDE)
         # ======================================
-        site_mpp = (
-            mpp_filtered[
-                mpp_filtered["loc"]
-                .astype(str)
-                .str.upper()
-                == site
-            ]
-            .reset_index(drop=True)
-        )
-
-        site_df = (
+        normal_sites = [
+            ("BCP", 1),
+            ("KCP", 4),
+            ("ACP", 7),
+        ]
+    
+        # ======================================
+        # LOOP SITE NORMAL
+        # ======================================
+        for site, start_idx in normal_sites:
+    
+            summary_slide = prs.slides[start_idx]
+            fit_slide = prs.slides[start_idx + 1]
+            pipeline_slide = prs.slides[start_idx + 2]
+    
+            # ======================================
+            # FILTER DATA
+            # ======================================
+            site_mpp = (
+                mpp_filtered[
+                    mpp_filtered["loc"]
+                    .astype(str)
+                    .str.upper()
+                    == site
+                ]
+                .reset_index(drop=True)
+            )
+    
+            site_df = (
+                df[
+                    df["loc"]
+                    .astype(str)
+                    .str.upper()
+                    == site
+                ]
+                .reset_index(drop=True)
+            )
+    
+            # ======================================
+            # SUMMARY
+            # ======================================
+            replacements = {}
+    
+            for i, letter in enumerate(letters):
+    
+                if i < len(site_mpp):
+    
+                    row = site_mpp.iloc[i]
+    
+                    replacements[f"{{{{{letter}}}}}"] = str(
+                        row.get("departement", "")
+                    )
+    
+                    replacements[f"{{{{MPP_{letter}}}}}"] = str(
+                        row.get("2026(r)", 0)
+                    )
+    
+                    replacements[f"{{{{ACT_{letter}}}}}"] = str(
+                        row.get("2026(a)", 0)
+                    )
+    
+                    replacements[f"{{{{DEV_{letter}}}}}"] = str(
+                        row.get("gap_fullfill_rec", 0)
+                    )
+    
+                    replacements[f"{{{{ADP_{letter}}}}}"] = str(
+                        row.get("talent_management", 0)
+                    )
+    
+                    replacements[f"{{{{EXT_{letter}}}}}"] = str(
+                        row.get("ext", 0)
+                    )
+    
+            for shape in summary_slide.shapes:
+    
+                if shape.has_table:
+    
+                    table = shape.table
+    
+                    for row in table.rows:
+    
+                        for cell in row.cells:
+    
+                            for key, value in replacements.items():
+    
+                                if key in cell.text:
+    
+                                    cell.text = cell.text.replace(
+                                        key,
+                                        value
+                                    )
+    
+            # ======================================
+            # FIT TO WORK
+            # ======================================
+            fit_df = (
+                site_df[
+                    site_df["result_fu_mcu"]
+                    .astype(str)
+                    .str.upper()
+                    == "FIT TO WORK"
+                ]
+                .reset_index(drop=True)
+            )
+    
+            replacements = {}
+    
+            for i, letter in enumerate(letters):
+    
+                if i < len(fit_df):
+    
+                    row = fit_df.iloc[i]
+    
+                    replacements[f"{{{{{letter}}}}}"] = str(
+                        row.get("candidate_id", "")
+                    )
+    
+                    replacements[f"{{{{loc_{letter}}}}}"] = str(
+                        row.get("loc", "")
+                    )
+    
+                    replacements[f"{{{{Pos_{letter}}}}}"] = str(
+                        row.get("position_name", "")
+                    )
+    
+                    replacements[f"{{{{dep_{letter}}}}}"] = str(
+                        row.get("departement", "")
+                    )
+    
+                    replacements[f"{{{{result_{letter}}}}}"] = str(
+                        row.get("result_fu_mcu", "")
+                    )
+    
+                    replacements[f"{{{{date_{letter}}}}}"] = str(
+                        row.get("date_onboarding", "")
+                    )
+    
+            for shape in fit_slide.shapes:
+    
+                if shape.has_table:
+    
+                    table = shape.table
+    
+                    for row in table.rows:
+    
+                        for cell in row.cells:
+    
+                            for key, value in replacements.items():
+    
+                                if key in cell.text:
+    
+                                    cell.text = cell.text.replace(
+                                        key,
+                                        value
+                                    )
+    
+            # ======================================
+            # PIPELINE
+            # ======================================
+            total_screening = int(site_df["start_screening_cv"].notna().sum()) if "start_screening_cv" in site_df.columns else 0
+            total_hr = int(site_df["start_interview_hr"].notna().sum()) if "start_interview_hr" in site_df.columns else 0
+            total_user = int(site_df["start_interview_user"].notna().sum()) if "start_interview_user" in site_df.columns else 0
+            total_psy = int(site_df["start_psychotest"].notna().sum()) if "start_psychotest" in site_df.columns else 0
+            total_offer = int(site_df["start_offering"].notna().sum()) if "start_offering" in site_df.columns else 0
+            total_mcu = int(site_df["start_mcu"].notna().sum()) if "start_mcu" in site_df.columns else 0
+            total_review = int(site_df["start_review_mcu"].notna().sum()) if "start_review_mcu" in site_df.columns else 0
+            total_fu = int(site_df["start_fu_mcu"].notna().sum()) if "start_fu_mcu" in site_df.columns else 0
+            total_onboard = int(site_df["date_onboarding"].notna().sum()) if "date_onboarding" in site_df.columns else 0
+    
+            for shape in pipeline_slide.shapes:
+    
+                if hasattr(shape, "text"):
+    
+                    if "PLAN VS ACTUAL" in shape.text:
+    
+                        shape.text = f"""
+    PLAN VS ACTUAL
+    
+    Screening CV : {total_screening}
+    HR Interview : {total_hr}
+    User Interview : {total_user}
+    Psychotest : {total_psy}
+    Offering : {total_offer}
+    MCU : {total_mcu}
+    Review MCU : {total_review}
+    FU MCU : {total_fu}
+    Onboarding : {total_onboard}
+    """
+    
+        # ======================================
+        # JKT SLIDE (ONLY 1 SLIDE)
+        # ======================================
+        jkt_slide = prs.slides[10]
+    
+        total_jkt = len(
             df[
                 df["loc"]
                 .astype(str)
                 .str.upper()
-                == site
+                == "JKT"
             ]
-            .reset_index(drop=True)
         )
-
-        # ======================================
-        # SUMMARY
-        # ======================================
-        replacements = {}
-
-        for i, letter in enumerate(letters):
-
-            if i < len(site_mpp):
-
-                row = site_mpp.iloc[i]
-
-                replacements[f"{{{{{letter}}}}}"] = str(
-                    row.get("departement", "")
-                )
-
-                replacements[f"{{{{MPP_{letter}}}}}"] = str(
-                    row.get("2026(r)", 0)
-                )
-
-                replacements[f"{{{{ACT_{letter}}}}}"] = str(
-                    row.get("2026(a)", 0)
-                )
-
-                replacements[f"{{{{DEV_{letter}}}}}"] = str(
-                    row.get("gap_fullfill_rec", 0)
-                )
-
-                replacements[f"{{{{ADP_{letter}}}}}"] = str(
-                    row.get("talent_management", 0)
-                )
-
-                replacements[f"{{{{EXT_{letter}}}}}"] = str(
-                    row.get("ext", 0)
-                )
-
-        for shape in summary_slide.shapes:
-
-            if shape.has_table:
-
-                table = shape.table
-
-                for row in table.rows:
-
-                    for cell in row.cells:
-
-                        for key, value in replacements.items():
-
-                            if key in cell.text:
-
-                                cell.text = cell.text.replace(
-                                    key,
-                                    value
-                                )
-
-        # ======================================
-        # FIT TO WORK
-        # ======================================
-        fit_df = (
-            site_df[
-                site_df["result_fu_mcu"]
-                .astype(str)
-                .str.upper()
-                == "FIT TO WORK"
-            ]
-            .reset_index(drop=True)
-        )
-
-        replacements = {}
-
-        for i, letter in enumerate(letters):
-
-            if i < len(fit_df):
-
-                row = fit_df.iloc[i]
-
-                replacements[f"{{{{{letter}}}}}"] = str(
-                    row.get("candidate_id", "")
-                )
-
-                replacements[f"{{{{loc_{letter}}}}}"] = str(
-                    row.get("loc", "")
-                )
-
-                replacements[f"{{{{Pos_{letter}}}}}"] = str(
-                    row.get("position_name", "")
-                )
-
-                replacements[f"{{{{dep_{letter}}}}}"] = str(
-                    row.get("departement", "")
-                )
-
-                replacements[f"{{{{result_{letter}}}}}"] = str(
-                    row.get("result_fu_mcu", "")
-                )
-
-                replacements[f"{{{{date_{letter}}}}}"] = str(
-                    row.get("date_onboarding", "")
-                )
-
-        for shape in fit_slide.shapes:
-
-            if shape.has_table:
-
-                table = shape.table
-
-                for row in table.rows:
-
-                    for cell in row.cells:
-
-                        for key, value in replacements.items():
-
-                            if key in cell.text:
-
-                                cell.text = cell.text.replace(
-                                    key,
-                                    value
-                                )
-
-        # ======================================
-        # PIPELINE
-        # ======================================
-        total_screening = int(site_df["start_screening_cv"].notna().sum()) if "start_screening_cv" in site_df.columns else 0
-        total_hr = int(site_df["start_interview_hr"].notna().sum()) if "start_interview_hr" in site_df.columns else 0
-        total_user = int(site_df["start_interview_user"].notna().sum()) if "start_interview_user" in site_df.columns else 0
-        total_psy = int(site_df["start_psychotest"].notna().sum()) if "start_psychotest" in site_df.columns else 0
-        total_offer = int(site_df["start_offering"].notna().sum()) if "start_offering" in site_df.columns else 0
-        total_mcu = int(site_df["start_mcu"].notna().sum()) if "start_mcu" in site_df.columns else 0
-        total_review = int(site_df["start_review_mcu"].notna().sum()) if "start_review_mcu" in site_df.columns else 0
-        total_fu = int(site_df["start_fu_mcu"].notna().sum()) if "start_fu_mcu" in site_df.columns else 0
-        total_onboard = int(site_df["date_onboarding"].notna().sum()) if "date_onboarding" in site_df.columns else 0
-
-        for shape in pipeline_slide.shapes:
-
+    
+        for shape in jkt_slide.shapes:
+    
             if hasattr(shape, "text"):
-
-                if "PLAN VS ACTUAL" in shape.text:
-
-                    shape.text = f"""
-PLAN VS ACTUAL
-
-Screening CV : {total_screening}
-HR Interview : {total_hr}
-User Interview : {total_user}
-Psychotest : {total_psy}
-Offering : {total_offer}
-MCU : {total_mcu}
-Review MCU : {total_review}
-FU MCU : {total_fu}
-Onboarding : {total_onboard}
-"""
-
-    # ======================================
-    # JKT SLIDE (ONLY 1 SLIDE)
-    # ======================================
-    jkt_slide = prs.slides[10]
-
-    total_jkt = len(
-        df[
-            df["loc"]
-            .astype(str)
-            .str.upper()
-            == "JKT"
-        ]
-    )
-
-    for shape in jkt_slide.shapes:
-
-        if hasattr(shape, "text"):
-
-            if "{{TOTAL_JKT}}" in shape.text:
-
-                shape.text = shape.text.replace(
-                    "{{TOTAL_JKT}}",
-                    str(total_jkt)
-                )
-
-    # ======================================
-    # SAVE PPT
-    # ======================================
-    ppt_buffer = BytesIO()
-
-    prs.save(ppt_buffer)
-
-    ppt_buffer.seek(0)
-
-    return ppt_buffer
+    
+                if "{{TOTAL_JKT}}" in shape.text:
+    
+                    shape.text = shape.text.replace(
+                        "{{TOTAL_JKT}}",
+                        str(total_jkt)
+                    )
+    
+        # ======================================
+        # SAVE PPT
+        # ======================================
+        ppt_buffer = BytesIO()
+    
+        prs.save(ppt_buffer)
+    
+        ppt_buffer.seek(0)
+    
+        return ppt_buffer
                 
     col_logo, col_title = st.columns([1, 8], vertical_alignment="center")
     with col_logo:
