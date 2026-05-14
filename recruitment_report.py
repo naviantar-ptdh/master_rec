@@ -515,7 +515,13 @@ def run_tracking():
         m2.metric("Department", row.get("departement", "-"))
         m3.metric("Level", row.get("level", "-"))
         m4.metric("Location", row.get("loc", "-"))
-        m5.metric("SLA", row.get("total_lt", "-"))
+
+        sla_value = row.get("total_lt", "-")
+        if isinstance(sla_value, (int, float)):
+            sla_value = int(sla_value)
+
+        m5.metric("SLA", sla_value)
+        
 
         # BOX STATUS WARNA (Sesuai Foto)
         h_st = str(row.get("status1", "Unknown")).upper()
