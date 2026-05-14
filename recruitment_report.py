@@ -510,11 +510,12 @@ def run_tracking():
         st.subheader(f"Candidate: {sel_cand}")
         
         # 4 KOLOM METRIK (Sesuai Foto)
-        m1, m2, m3, m4 = st.columns(4)
+        m1, m2, m3, m4, m5 = st.columns(5)
         m1.metric("Position", row.get("position_name", "-"))
         m2.metric("Department", row.get("departement", "-"))
         m3.metric("Level", row.get("level", "-"))
         m4.metric("Location", row.get("loc", "-"))
+        m5.metric("SLA", row.get("total_lt", "-"))
 
         # BOX STATUS WARNA (Sesuai Foto)
         h_st = str(row.get("status1", "Unknown")).upper()
