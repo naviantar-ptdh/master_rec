@@ -72,107 +72,265 @@ def run_rec_report():
     # FUNCTION GENERATE PPT
     # ==========================================
     def generate_recruitment_ppt(df, mpp_filtered, final):
-    # Gunakan template yang ada
-        try:
-            prs = Presentation("Recruitment Report Template.pptx")
-        except:
-            # Fallback jika file tidak ditemukan saat testing
-            prs = Presentation() 
-        
+
+        prs = Presentation("Recruitment Report Template.pptx")
+    
         letters = list("ABCDEFGHIJKL")
-        
-        # Mapping slide berdasarkan urutan di template Anda
-        # Format: (Nama Site, Index Slide Summary)
+    
         normal_sites = [
             ("BCP", 1),
             ("KCP", 4),
             ("ACP", 7),
         ]
     
+        # ======================================
+        # LOOP SITE
+        # ======================================
         for site, start_idx in normal_sites:
+    
             summary_slide = prs.slides[start_idx]
             fit_slide = prs.slides[start_idx + 1]
             pipeline_slide = prs.slides[start_idx + 2]
     
-            # 1. FILTER DATA SITE (Gunakan .upper() untuk keamanan)
-            site_mpp = mpp_filtered[mpp_filtered["loc"].astype(str).str.upper() == site].reset_index(drop=True)
-            site_df = df[df["loc"].astype(str).str.upper() == site].reset_index(drop=True)
+            # ======================================
+            # FILTER DATA
+            # ======================================
+            site_mpp = (
+                mpp_filtered[
+                    mpp_filtered["loc"]
+                    .astype(str)
+                    .str.upper()
+                    == site
+                ]
+                .reset_index(drop=True)
+            )
     
-            # 2. SUMMARY REPLACEMENTS
+            site_df = (
+                df[
+                    df["loc"]
+                    .astype(str)
+                    .str.upper()
+                    == site
+                ]
+                .reset_index(drop=True)
+            )
+    
+            # ======================================
+            # SUMMARY REPLACEMENT
+            # ======================================
             replacements = {}
+    
             for i, letter in enumerate(letters):
+    
                 if i < len(site_mpp):
+    
                     row = site_mpp.iloc[i]
-                    # Cari data pipeline di tabel 'final' yang cocok dengan divisi ini
-                    # Pastikan kolom 'divisi' ada di dataframe 'final'
-                    div_name = row.get("divisi", "")
-                    div_pipeline = final[final["divisi"] == div_name]
     
-                    replacements[f"{{{{{letter}}}}}"] = str(div_name)
-                    replacements[f"{{{{MPP_{letter}}}}}"] = str(int(row.get("2026(r)", 0)))
-                    replacements[f"{{{{ACT_{letter}}}}}"] = str(int(row.get("2026(a)", 0)))
-                    replacements[f"{{{{DEV_{letter}}}}}"] = str(int(row.get("gap_fullfill_rec", 0)))
-                    replacements[f"{{{{ADP_{letter}}}}}"] = str(int(row.get("talent_management", 0)))
-                    replacements[f"{{{{EXT_{letter}}}}}"] = str(int(row.get("ext", 0)))
-                    
-                    # Ambil data dari tabel final (Pipeline)
-                    if not div_pipeline.empty:
-                        replacements[f"{{{{int_{letter}}}}}"] = str(int(div_pipeline["HR Interview"].values[0]))
-                        replacements[f"{{{{psy_{letter}}}}}"] = str(int(div_pipeline["Psychotest"].values[0]))
-                        replacements[f"{{{{ofe_{letter}}}}}"] = str(int(div_pipeline["Offering"].values[0]))
-                        replacements[f"{{{{mcu_{letter}}}}}"] = str(int(div_pipeline["MCU"].values[0]))
-                    else:
-                        for k in ["int", "psy", "ofe", "mcu"]: 
-                            replacements[f"{{{{{k}_{letter}}}}}"] = "0"
-                else:
-                    # Jika data kosong, bersihkan placeholder agar tidak merusak tampilan PPT
-                    replacements[f"{{{{{letter}}}}}"] = ""
-                    for k in ["MPP", "ACT", "DEV", "ADP", "EXT", "int", "psy", "ofe", "mcu"]:
-                        replacements[f"{{{{{k}_{letter}}}}}"] = ""
+                    div_pipeline = final[
+                        final["divisi"] == row["divisi"]
+                    ]
     
-            # PROSES REPLACE DI TABEL SUMMARY
+                    replacements[f"{{{{{letter}}}}}"] = str(
+                        row.get("divisi", "")
+                    )
+    
+                    replacements[f"{{{{MPP_{letter}}}}}"] = str(
+                        row.get("2026(r)", 0)
+                    )
+    
+                    replacements[f"{{{{ACT_{letter}}}}}"] = str(
+                        row.get("2026(a)", 0)
+                    )
+    
+                    replacements[f"{{{{DEV_{letter}}}}}"] = str(
+                        row.get("gap_fullfill_rec", 0)
+                    )
+    
+                    replacements[f"{{{{ADP_{letter}}}}}"] = str(
+                        row.get("talent_management", 0)
+                    )
+    
+                    replacements[f"{{{{EXT_{letter}}}}}"] = str(
+                        row.get("ext", 0)
+                    )
+    
+                    replacements[f"{{{{int_{letter}}}}}"] = str(
+                        int(div_pipeline["HR Interview"].sum())
+                        if not div_pipeline.empty else 0
+                    )
+    
+                    replacements[f"{{{{psy_{letter}}}}}"] = str(
+                        int(div_pipeline["Psychotest"].sum())
+                        if not div_pipeline.empty else 0
+                    )
+    
+                    # FIX TYPO HERE
+                    replacements[f"{{{{ofe_{letter}}}}}"] = str(
+                        int(div_pipeline["Offering"].sum())
+                        if not div_pipeline.empty else 0
+                    )
+    
+                    replacements[f"{{{{mcu_{letter}}}}}"] = str(
+                        int(div_pipeline["MCU"].sum())
+                        if not div_pipeline.empty else 0
+                    )
+    
+                    replacements[f"{{{{devf_{letter}}}}}"] = str(
+                        int(row.get("gap_fullfill_rec", 0))
+                    )
+    
+            # REPLACE SUMMARY
             for shape in summary_slide.shapes:
-                if shape.has_table:
-                    for r in shape.table.rows:
-                        for cell in r.cells:
-                            for key, val in replacements.items():
-                                if key in cell.text:
-                                    cell.text = cell.text.replace(key, val)
     
-            # 3. FIT TO WORK SLIDE
-            fit_df = site_df[site_df["result_fu_mcu"].astype(str).str.upper() == "FIT TO WORK"].reset_index(drop=True)
-            fit_replaces = {}
+                if shape.has_table:
+    
+                    table = shape.table
+    
+                    for row in table.rows:
+    
+                        for cell in row.cells:
+    
+                            for key, value in replacements.items():
+    
+                                if key in cell.text:
+    
+                                    cell.text = cell.text.replace(
+                                        key,
+                                        value
+                                    )
+    
+            # ======================================
+            # FIT TO WORK
+            # ======================================
+            fit_df = (
+                site_df[
+                    site_df["result_fu_mcu"]
+                    .astype(str)
+                    .str.upper()
+                    == "FIT TO WORK"
+                ]
+                .reset_index(drop=True)
+            )
+    
+            replacements = {}
+    
             for i, letter in enumerate(letters):
+    
                 if i < len(fit_df):
-                    f_row = fit_df.iloc[i]
-                    fit_replaces[f"{{{{{letter}}}}}"] = str(f_row.get("candidate_id", ""))
-                    fit_replaces[f"{{{{loc_{letter}}}}}"] = str(f_row.get("loc", ""))
-                    fit_replaces[f"{{{{Pos_{letter}}}}}"] = str(f_row.get("position_name", ""))
-                    fit_replaces[f"{{{{dep_{letter}}}}}"] = str(f_row.get("divisi", ""))
-                    fit_replaces[f"{{{{result_{letter}}}}}"] = "FIT TO WORK"
-                    fit_replaces[f"{{{{date_{letter}}}}}"] = str(f_row.get("date_onboarding", "-"))
-                else:
-                    fit_replaces[f"{{{{{letter}}}}}"] = ""
-                    # ... bersihkan sisa placeholder fit ...
     
+                    row = fit_df.iloc[i]
+    
+                    replacements[f"{{{{{letter}}}}}"] = str(
+                        row.get("candidate_id", "")
+                    )
+    
+                    replacements[f"{{{{loc_{letter}}}}}"] = str(
+                        row.get("loc", "")
+                    )
+    
+                    replacements[f"{{{{Pos_{letter}}}}}"] = str(
+                        row.get("position_name", "")
+                    )
+    
+                    replacements[f"{{{{dep_{letter}}}}}"] = str(
+                        row.get("divisi", "")
+                    )
+    
+                    replacements[f"{{{{result_{letter}}}}}"] = str(
+                        row.get("result_fu_mcu", "")
+                    )
+    
+                    replacements[f"{{{{date_{letter}}}}}"] = str(
+                        row.get("date_onboarding", "")
+                    )
+    
+            # REPLACE FIT SLIDE
             for shape in fit_slide.shapes:
+    
                 if shape.has_table:
-                    for r in shape.table.rows:
-                        for cell in r.cells:
-                            for key, val in fit_replaces.items():
+    
+                    table = shape.table
+    
+                    for row in table.rows:
+    
+                        for cell in row.cells:
+    
+                            for key, value in replacements.items():
+    
                                 if key in cell.text:
-                                    cell.text = cell.text.replace(key, val)
     
-        # 4. JKT SLIDE (Slide 10)
+                                    cell.text = cell.text.replace(
+                                        key,
+                                        value
+                                    )
+    
+            # ======================================
+            # PIPELINE SLIDE
+            # ======================================
+            total_screening = int(site_df["start_screening_cv"].notna().sum())
+            total_hr = int(site_df["start_interview_hr"].notna().sum())
+            total_user = int(site_df["start_interview_user"].notna().sum())
+            total_psy = int(site_df["start_psychotest"].notna().sum())
+            total_offer = int(site_df["start_offering"].notna().sum())
+            total_mcu = int(site_df["start_mcu"].notna().sum())
+            total_review = int(site_df["start_review_mcu"].notna().sum())
+            total_fu = int(site_df["start_fu_mcu"].notna().sum())
+            total_onboard = int(site_df["date_onboarding"].notna().sum())
+    
+            for shape in pipeline_slide.shapes:
+    
+                if hasattr(shape, "text"):
+    
+                    if "PLAN VS ACTUAL" in shape.text:
+    
+                        shape.text = f"""
+    PLAN VS ACTUAL
+    
+    Screening CV : {total_screening}
+    HR Interview : {total_hr}
+    User Interview : {total_user}
+    Psychotest : {total_psy}
+    Offering : {total_offer}
+    MCU : {total_mcu}
+    Review MCU : {total_review}
+    FU MCU : {total_fu}
+    Onboarding : {total_onboard}
+    """
+    
+        # ======================================
+        # JKT SLIDE
+        # ======================================
         jkt_slide = prs.slides[10]
-        total_jkt = len(df[df["loc"].astype(str).str.upper() == "JKT"])
-        for shape in jkt_slide.shapes:
-            if hasattr(shape, "text") and "{{TOTAL_JKT}}" in shape.text:
-                shape.text = shape.text.replace("{{TOTAL_JKT}}", str(total_jkt))
     
+        total_jkt = len(
+            df[
+                df["loc"]
+                .astype(str)
+                .str.upper()
+                == "JKT"
+            ]
+        )
+    
+        for shape in jkt_slide.shapes:
+    
+            if hasattr(shape, "text"):
+    
+                if "{{TOTAL_JKT}}" in shape.text:
+    
+                    shape.text = shape.text.replace(
+                        "{{TOTAL_JKT}}",
+                        str(total_jkt)
+                    )
+    
+        # ======================================
+        # SAVE
+        # ======================================
         ppt_buffer = BytesIO()
+    
         prs.save(ppt_buffer)
+    
         ppt_buffer.seek(0)
+    
         return ppt_buffer
                 
     col_logo, col_title = st.columns([1, 8], vertical_alignment="center")
